@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:18-bookworm
+    environment:
+      POSTGRES_DATABASE: gcook
+      POSTGRES_USER: gcook
+      POSTGRES_PASSWORD: p4ssw0rd!
+    volumes:
+      - ./database/initdb.d:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "gcook"]
+      start_period: 0s
+      interval: 1s
+      timeout: 5s
+    ports:
+      - "127.0.0.1:25432:5432"
+      - "[::1]:25432:5432"
+
+volumes:
+  postgres_data:
