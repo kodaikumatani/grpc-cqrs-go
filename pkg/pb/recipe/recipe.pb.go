@@ -210,6 +210,94 @@ func (x *CreateRecipeResponse) GetRecipeId() string {
 	return ""
 }
 
+type GetRecipeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetRecipeRequest) Reset() {
+	*x = GetRecipeRequest{}
+	mi := &file_recipe_recipe_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRecipeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRecipeRequest) ProtoMessage() {}
+
+func (x *GetRecipeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_recipe_recipe_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRecipeRequest.ProtoReflect.Descriptor instead.
+func (*GetRecipeRequest) Descriptor() ([]byte, []int) {
+	return file_recipe_recipe_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetRecipeRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetRecipeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Recipe        *Recipe                `protobuf:"bytes,1,opt,name=recipe,proto3" json:"recipe,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetRecipeResponse) Reset() {
+	*x = GetRecipeResponse{}
+	mi := &file_recipe_recipe_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRecipeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRecipeResponse) ProtoMessage() {}
+
+func (x *GetRecipeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_recipe_recipe_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRecipeResponse.ProtoReflect.Descriptor instead.
+func (*GetRecipeResponse) Descriptor() ([]byte, []int) {
+	return file_recipe_recipe_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetRecipeResponse) GetRecipe() *Recipe {
+	if x != nil {
+		return x.Recipe
+	}
+	return nil
+}
+
 type UpdateRecipeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -221,7 +309,7 @@ type UpdateRecipeRequest struct {
 
 func (x *UpdateRecipeRequest) Reset() {
 	*x = UpdateRecipeRequest{}
-	mi := &file_recipe_recipe_proto_msgTypes[3]
+	mi := &file_recipe_recipe_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -233,7 +321,7 @@ func (x *UpdateRecipeRequest) String() string {
 func (*UpdateRecipeRequest) ProtoMessage() {}
 
 func (x *UpdateRecipeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recipe_recipe_proto_msgTypes[3]
+	mi := &file_recipe_recipe_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -246,7 +334,7 @@ func (x *UpdateRecipeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRecipeRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRecipeRequest) Descriptor() ([]byte, []int) {
-	return file_recipe_recipe_proto_rawDescGZIP(), []int{3}
+	return file_recipe_recipe_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *UpdateRecipeRequest) GetId() string {
@@ -279,7 +367,7 @@ type UpdateRecipeResponse struct {
 
 func (x *UpdateRecipeResponse) Reset() {
 	*x = UpdateRecipeResponse{}
-	mi := &file_recipe_recipe_proto_msgTypes[4]
+	mi := &file_recipe_recipe_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -291,7 +379,7 @@ func (x *UpdateRecipeResponse) String() string {
 func (*UpdateRecipeResponse) ProtoMessage() {}
 
 func (x *UpdateRecipeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recipe_recipe_proto_msgTypes[4]
+	mi := &file_recipe_recipe_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -304,7 +392,7 @@ func (x *UpdateRecipeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRecipeResponse.ProtoReflect.Descriptor instead.
 func (*UpdateRecipeResponse) Descriptor() ([]byte, []int) {
-	return file_recipe_recipe_proto_rawDescGZIP(), []int{4}
+	return file_recipe_recipe_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateRecipeResponse) GetSuccess() bool {
@@ -333,15 +421,20 @@ const file_recipe_recipe_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\"3\n" +
 	"\x14CreateRecipeResponse\x12\x1b\n" +
-	"\trecipe_id\x18\x01 \x01(\tR\brecipeId\"]\n" +
+	"\trecipe_id\x18\x01 \x01(\tR\brecipeId\"\"\n" +
+	"\x10GetRecipeRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\";\n" +
+	"\x11GetRecipeResponse\x12&\n" +
+	"\x06recipe\x18\x01 \x01(\v2\x0e.recipe.RecipeR\x06recipe\"]\n" +
 	"\x13UpdateRecipeRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\"0\n" +
 	"\x14UpdateRecipeResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xa5\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xe7\x01\n" +
 	"\rRecipeService\x12I\n" +
-	"\fCreateRecipe\x12\x1b.recipe.CreateRecipeRequest\x1a\x1c.recipe.CreateRecipeResponse\x12I\n" +
+	"\fCreateRecipe\x12\x1b.recipe.CreateRecipeRequest\x1a\x1c.recipe.CreateRecipeResponse\x12@\n" +
+	"\tGetRecipe\x12\x18.recipe.GetRecipeRequest\x1a\x19.recipe.GetRecipeResponse\x12I\n" +
 	"\fUpdateRecipe\x12\x1b.recipe.UpdateRecipeRequest\x1a\x1c.recipe.UpdateRecipeResponseB2Z0github.com/kodaikumatani/grpc-cqrs/pkg/pb/recipeb\x06proto3"
 
 var (
@@ -356,27 +449,32 @@ func file_recipe_recipe_proto_rawDescGZIP() []byte {
 	return file_recipe_recipe_proto_rawDescData
 }
 
-var file_recipe_recipe_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_recipe_recipe_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_recipe_recipe_proto_goTypes = []any{
 	(*Recipe)(nil),                // 0: recipe.Recipe
 	(*CreateRecipeRequest)(nil),   // 1: recipe.CreateRecipeRequest
 	(*CreateRecipeResponse)(nil),  // 2: recipe.CreateRecipeResponse
-	(*UpdateRecipeRequest)(nil),   // 3: recipe.UpdateRecipeRequest
-	(*UpdateRecipeResponse)(nil),  // 4: recipe.UpdateRecipeResponse
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(*GetRecipeRequest)(nil),      // 3: recipe.GetRecipeRequest
+	(*GetRecipeResponse)(nil),     // 4: recipe.GetRecipeResponse
+	(*UpdateRecipeRequest)(nil),   // 5: recipe.UpdateRecipeRequest
+	(*UpdateRecipeResponse)(nil),  // 6: recipe.UpdateRecipeResponse
+	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
 }
 var file_recipe_recipe_proto_depIdxs = []int32{
-	5, // 0: recipe.Recipe.created_at:type_name -> google.protobuf.Timestamp
-	5, // 1: recipe.Recipe.updated_at:type_name -> google.protobuf.Timestamp
-	1, // 2: recipe.RecipeService.CreateRecipe:input_type -> recipe.CreateRecipeRequest
-	3, // 3: recipe.RecipeService.UpdateRecipe:input_type -> recipe.UpdateRecipeRequest
-	2, // 4: recipe.RecipeService.CreateRecipe:output_type -> recipe.CreateRecipeResponse
-	4, // 5: recipe.RecipeService.UpdateRecipe:output_type -> recipe.UpdateRecipeResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	7, // 0: recipe.Recipe.created_at:type_name -> google.protobuf.Timestamp
+	7, // 1: recipe.Recipe.updated_at:type_name -> google.protobuf.Timestamp
+	0, // 2: recipe.GetRecipeResponse.recipe:type_name -> recipe.Recipe
+	1, // 3: recipe.RecipeService.CreateRecipe:input_type -> recipe.CreateRecipeRequest
+	3, // 4: recipe.RecipeService.GetRecipe:input_type -> recipe.GetRecipeRequest
+	5, // 5: recipe.RecipeService.UpdateRecipe:input_type -> recipe.UpdateRecipeRequest
+	2, // 6: recipe.RecipeService.CreateRecipe:output_type -> recipe.CreateRecipeResponse
+	4, // 7: recipe.RecipeService.GetRecipe:output_type -> recipe.GetRecipeResponse
+	6, // 8: recipe.RecipeService.UpdateRecipe:output_type -> recipe.UpdateRecipeResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_recipe_recipe_proto_init() }
@@ -390,7 +488,7 @@ func file_recipe_recipe_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_recipe_recipe_proto_rawDesc), len(file_recipe_recipe_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

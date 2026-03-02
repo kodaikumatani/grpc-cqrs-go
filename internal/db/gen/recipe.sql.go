@@ -37,3 +37,23 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) erro
 	)
 	return err
 }
+
+const getRecipe = `-- name: GetRecipe :one
+SELECT id, user_id, title, description, created_at, updated_at
+FROM recipes
+WHERE id = $1
+`
+
+func (q *Queries) GetRecipe(ctx context.Context, id uuid.UUID) (Recipe, error) {
+	row := q.db.QueryRow(ctx, getRecipe, id)
+	var i Recipe
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Title,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}

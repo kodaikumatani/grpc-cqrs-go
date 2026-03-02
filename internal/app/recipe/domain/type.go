@@ -1,7 +1,6 @@
-package recipe
+package domain
 
 import (
-	"context"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -19,8 +18,4 @@ type Recipe struct {
 	Description string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-}
-
-type Storage interface {
-	Create(ctx context.Context, recipe *Recipe) error
 }

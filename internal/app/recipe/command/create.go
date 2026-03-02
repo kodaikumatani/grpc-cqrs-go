@@ -1,32 +1,33 @@
-package recipe
+package command
 
 import (
 	"context"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/domain"
 	"github.com/samber/lo"
 )
 
-type UseCase struct {
+type Command struct {
 	storage Storage
 }
 
-func NewUseCase(
+func NewCommand(
 	storage Storage,
-) *UseCase {
-	return &UseCase{
+) *Command {
+	return &Command{
 		storage: storage,
 	}
 }
 
-func (u *UseCase) Create(
+func (u *Command) Create(
 	ctx context.Context,
 	userID,
 	title,
 	description string,
-) (*Recipe, error) {
-	recipe := Recipe{
+) (*domain.Recipe, error) {
+	recipe := domain.Recipe{
 		ID:          lo.Must(uuid.NewV7()),
 		UserID:      userID,
 		Title:       title,

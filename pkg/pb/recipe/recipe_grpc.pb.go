@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	RecipeService_CreateRecipe_FullMethodName = "/recipe.RecipeService/CreateRecipe"
+	RecipeService_GetRecipe_FullMethodName    = "/recipe.RecipeService/GetRecipe"
 	RecipeService_UpdateRecipe_FullMethodName = "/recipe.RecipeService/UpdateRecipe"
 )
 
@@ -28,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RecipeServiceClient interface {
 	CreateRecipe(ctx context.Context, in *CreateRecipeRequest, opts ...grpc.CallOption) (*CreateRecipeResponse, error)
+	GetRecipe(ctx context.Context, in *GetRecipeRequest, opts ...grpc.CallOption) (*GetRecipeResponse, error)
 	UpdateRecipe(ctx context.Context, in *UpdateRecipeRequest, opts ...grpc.CallOption) (*UpdateRecipeResponse, error)
 }
 
@@ -49,6 +51,16 @@ func (c *recipeServiceClient) CreateRecipe(ctx context.Context, in *CreateRecipe
 	return out, nil
 }
 
+func (c *recipeServiceClient) GetRecipe(ctx context.Context, in *GetRecipeRequest, opts ...grpc.CallOption) (*GetRecipeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRecipeResponse)
+	err := c.cc.Invoke(ctx, RecipeService_GetRecipe_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *recipeServiceClient) UpdateRecipe(ctx context.Context, in *UpdateRecipeRequest, opts ...grpc.CallOption) (*UpdateRecipeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateRecipeResponse)
@@ -64,6 +76,7 @@ func (c *recipeServiceClient) UpdateRecipe(ctx context.Context, in *UpdateRecipe
 // for forward compatibility.
 type RecipeServiceServer interface {
 	CreateRecipe(context.Context, *CreateRecipeRequest) (*CreateRecipeResponse, error)
+	GetRecipe(context.Context, *GetRecipeRequest) (*GetRecipeResponse, error)
 	UpdateRecipe(context.Context, *UpdateRecipeRequest) (*UpdateRecipeResponse, error)
 	mustEmbedUnimplementedRecipeServiceServer()
 }
@@ -77,6 +90,9 @@ type UnimplementedRecipeServiceServer struct{}
 
 func (UnimplementedRecipeServiceServer) CreateRecipe(context.Context, *CreateRecipeRequest) (*CreateRecipeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateRecipe not implemented")
+}
+func (UnimplementedRecipeServiceServer) GetRecipe(context.Context, *GetRecipeRequest) (*GetRecipeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRecipe not implemented")
 }
 func (UnimplementedRecipeServiceServer) UpdateRecipe(context.Context, *UpdateRecipeRequest) (*UpdateRecipeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateRecipe not implemented")
@@ -120,6 +136,24 @@ func _RecipeService_CreateRecipe_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RecipeService_GetRecipe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRecipeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecipeServiceServer).GetRecipe(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RecipeService_GetRecipe_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecipeServiceServer).GetRecipe(ctx, req.(*GetRecipeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RecipeService_UpdateRecipe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateRecipeRequest)
 	if err := dec(in); err != nil {
@@ -148,6 +182,10 @@ var RecipeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateRecipe",
 			Handler:    _RecipeService_CreateRecipe_Handler,
+		},
+		{
+			MethodName: "GetRecipe",
+			Handler:    _RecipeService_GetRecipe_Handler,
 		},
 		{
 			MethodName: "UpdateRecipe",

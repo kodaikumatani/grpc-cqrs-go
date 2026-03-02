@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 service RecipeService {
   rpc CreateRecipe(CreateRecipeRequest) returns (CreateRecipeResponse);
+  rpc GetRecipe(GetRecipeRequest) returns (GetRecipeResponse);
   rpc UpdateRecipe(UpdateRecipeRequest) returns (UpdateRecipeResponse);
 }
 
@@ -27,6 +28,10 @@ message CreateRecipeRequest {
 }
 
 message CreateRecipeResponse { string recipe_id = 1; }
+
+message GetRecipeRequest { string id = 1; }
+
+message GetRecipeResponse { Recipe recipe = 1; }
 
 message UpdateRecipeRequest {
   string id = 1;

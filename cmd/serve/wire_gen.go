@@ -11,9 +11,12 @@ import (
 	"github.com/google/wire"
 	"github.com/kodaikumatani/grpc-cqrs/internal"
 	"github.com/kodaikumatani/grpc-cqrs/internal/app"
-	recipe2 "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe"
+	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe"
+	command2 "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/command"
+	query2 "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs/internal/db"
-	"github.com/kodaikumatani/grpc-cqrs/internal/db/recipe"
+	"github.com/kodaikumatani/grpc-cqrs/internal/db/command"
+	"github.com/kodaikumatani/grpc-cqrs/internal/db/query"
 )
 
 // Injectors from wire.go:
@@ -23,9 +26,11 @@ func initializeServices(ctx context.Context, dsn string) (*services, func(), err
 	if err != nil {
 		return nil, nil, err
 	}
-	storage := recipe.NewRepository(pool)
-	useCase := recipe2.NewUseCase(storage)
-	recipeServiceServer := recipe2.NewHandler(useCase)
+	storage := command.NewRecipe(pool)
+	commandCommand := command2.NewCommand(storage)
+	queryStorage := query.NewRecipe(pool)
+	queryQuery := query2.NewQuery(queryStorage)
+	recipeServiceServer := recipe.NewHandler(commandCommand, queryQuery)
 	registrar := app.NewRegistrar(recipeServiceServer)
 	mainServices := &services{
 		Registrar: registrar,
