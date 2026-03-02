@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Handler struct {
+type handler struct {
 	pb.UnimplementedRecipeServiceServer
 	usecase *UseCase
 }
@@ -17,7 +17,7 @@ type Handler struct {
 func NewHandler(
 	create *UseCase,
 ) pb.RecipeServiceServer {
-	return &Handler{
+	return &handler{
 		usecase: create,
 	}
 }
@@ -28,7 +28,7 @@ type createRecipeRequest struct {
 	Description string `validate:"required"`
 }
 
-func (h *Handler) CreateRecipe(
+func (h *handler) CreateRecipe(
 	ctx context.Context,
 	in *pb.CreateRecipeRequest,
 ) (*pb.CreateRecipeResponse, error) {
