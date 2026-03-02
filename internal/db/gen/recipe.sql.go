@@ -3,7 +3,7 @@
 //   sqlc v1.30.0
 // source: recipe.sql
 
-package db
+package gen
 
 import (
 	"context"
