@@ -8,6 +8,7 @@ import (
 	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/domain"
 	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs/internal/db/gen"
+	"github.com/oklog/ulid/v2"
 )
 
 type recipe struct {
@@ -26,7 +27,7 @@ func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*domain.Recipe, error) 
 
 	return &domain.Recipe{
 		ID:          row.ID,
-		UserID:      row.UserID,
+		UserID:      ulid.MustParse(row.UserID),
 		Title:       row.Title,
 		Description: row.Description,
 		CreatedAt:   row.CreatedAt,

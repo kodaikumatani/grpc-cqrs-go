@@ -6,4 +6,5 @@ import (
 
 var Set = wire.NewSet(
 	NewRecipe,
+	NewUser,
 )

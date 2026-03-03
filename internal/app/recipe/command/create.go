@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/domain"
+	"github.com/oklog/ulid/v2"
 	"github.com/samber/lo"
 )
 
@@ -27,9 +28,14 @@ func (u *Command) Create(
 	title,
 	description string,
 ) (*domain.Recipe, error) {
+	uid, err := ulid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
 	recipe := domain.Recipe{
 		ID:          lo.Must(uuid.NewV7()),
-		UserID:      userID,
+		UserID:      uid,
 		Title:       title,
 		Description: description,
 		CreatedAt:   time.Now(),

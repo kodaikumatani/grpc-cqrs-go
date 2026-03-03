@@ -3,13 +3,17 @@ package app
 import (
 	"github.com/google/wire"
 	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/command"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
+	recipecommand "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/command"
+	recipequery "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
+	"github.com/kodaikumatani/grpc-cqrs/internal/app/user"
+	usercommand "github.com/kodaikumatani/grpc-cqrs/internal/app/user/command"
 )
 
 var Set = wire.NewSet(
-	command.NewCommand,
-	query.NewQuery,
+	recipecommand.NewCommand,
+	recipequery.NewQuery,
 	recipe.NewHandler,
+	usercommand.NewCommand,
+	user.NewHandler,
 	NewRegistrar,
 )

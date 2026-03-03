@@ -5,6 +5,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
 )
 
 var (
@@ -13,7 +14,7 @@ var (
 
 type Recipe struct {
 	ID          uuid.UUID
-	UserID      string
+	UserID      ulid.ULID
 	Title       string
 	Description string
 	CreatedAt   time.Time

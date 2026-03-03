@@ -14,6 +14,8 @@ import (
 	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe"
 	command2 "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/command"
 	query2 "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
+	"github.com/kodaikumatani/grpc-cqrs/internal/app/user"
+	command3 "github.com/kodaikumatani/grpc-cqrs/internal/app/user/command"
 	"github.com/kodaikumatani/grpc-cqrs/internal/db"
 	"github.com/kodaikumatani/grpc-cqrs/internal/db/command"
 	"github.com/kodaikumatani/grpc-cqrs/internal/db/query"
@@ -31,7 +33,10 @@ func initializeServices(ctx context.Context, dsn string) (*services, func(), err
 	queryStorage := query.NewRecipe(pool)
 	queryQuery := query2.NewQuery(queryStorage)
 	recipeServiceServer := recipe.NewHandler(commandCommand, queryQuery)
-	registrar := app.NewRegistrar(recipeServiceServer)
+	commandStorage := command.NewUser(pool)
+	command4 := command3.NewCommand(commandStorage)
+	userServiceServer := user.NewHandler(command4)
+	registrar := app.NewRegistrar(recipeServiceServer, userServiceServer)
 	mainServices := &services{
 		Registrar: registrar,
 	}
