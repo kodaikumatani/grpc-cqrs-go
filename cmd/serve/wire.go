@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"github.com/kodaikumatani/grpc-cqrs/internal"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app"
 )
 
 type services struct {

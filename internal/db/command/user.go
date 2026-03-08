@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/user/command"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/user/domain"
-	"github.com/kodaikumatani/grpc-cqrs/internal/db/gen"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
 )
 
 type user struct {

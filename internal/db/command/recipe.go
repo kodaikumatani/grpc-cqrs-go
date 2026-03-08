@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/command"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/domain"
-	"github.com/kodaikumatani/grpc-cqrs/internal/db/gen"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
 )
 
 type recipe struct {

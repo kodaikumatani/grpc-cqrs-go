@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/user/command"
-	pb "github.com/kodaikumatani/grpc-cqrs/pkg/pb/user"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
+	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/user"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

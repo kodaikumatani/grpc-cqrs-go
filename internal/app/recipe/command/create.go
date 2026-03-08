@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
 	"github.com/oklog/ulid/v2"
 	"github.com/samber/lo"
 )

@@ -1,4 +1,4 @@
-# grpc-cqrs
+# grpc-cqrs-go
 
 Feature-first + CQRS アーキテクチャで構築した gRPC サーバーです。
 レシピとユーザーの管理を行う API を提供します。

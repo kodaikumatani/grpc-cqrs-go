@@ -508,7 +508,7 @@ const file_recipe_recipe_proto_rawDesc = "" +
 	"\rRecipeService\x12I\n" +
 	"\fCreateRecipe\x12\x1b.recipe.CreateRecipeRequest\x1a\x1c.recipe.CreateRecipeResponse\x12@\n" +
 	"\tGetRecipe\x12\x18.recipe.GetRecipeRequest\x1a\x19.recipe.GetRecipeResponse\x12I\n" +
-	"\fUpdateRecipe\x12\x1b.recipe.UpdateRecipeRequest\x1a\x1c.recipe.UpdateRecipeResponseB2Z0github.com/kodaikumatani/grpc-cqrs/pkg/pb/recipeb\x06proto3"
+	"\fUpdateRecipe\x12\x1b.recipe.UpdateRecipeRequest\x1a\x1c.recipe.UpdateRecipeResponseB2Z0github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipeb\x06proto3"
 
 var (
 	file_recipe_recipe_proto_rawDescOnce sync.Once

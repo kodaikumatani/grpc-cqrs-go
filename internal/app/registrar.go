@@ -1,8 +1,8 @@
 package app
 
 import (
-	recipepb "github.com/kodaikumatani/grpc-cqrs/pkg/pb/recipe"
-	userpb "github.com/kodaikumatani/grpc-cqrs/pkg/pb/user"
+	recipepb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipe"
+	userpb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/user"
 	"google.golang.org/grpc"
 )
 

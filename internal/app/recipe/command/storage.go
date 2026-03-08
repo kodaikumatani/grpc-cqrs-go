@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
 )
 
 type Storage interface {

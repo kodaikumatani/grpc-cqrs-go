@@ -129,7 +129,7 @@ const file_user_user_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId2N\n" +
 	"\vUserService\x12?\n" +
 	"\n" +
-	"CreateUser\x12\x17.user.CreateUserRequest\x1a\x18.user.CreateUserResponseB0Z.github.com/kodaikumatani/grpc-cqrs/pkg/pb/userb\x06proto3"
+	"CreateUser\x12\x17.user.CreateUserRequest\x1a\x18.user.CreateUserResponseB0Z.github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/userb\x06proto3"
 
 var (
 	file_user_user_proto_rawDescOnce sync.Once

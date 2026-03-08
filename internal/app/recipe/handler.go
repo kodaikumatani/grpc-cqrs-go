@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/command"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
-	pb "github.com/kodaikumatani/grpc-cqrs/pkg/pb/recipe"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
+	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipe"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"

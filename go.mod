@@ -1,4 +1,4 @@
-module github.com/kodaikumatani/grpc-cqrs
+module github.com/kodaikumatani/grpc-cqrs-go
 
 go 1.25.7
 

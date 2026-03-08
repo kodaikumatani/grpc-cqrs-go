@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/user/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/domain"
 	"github.com/oklog/ulid/v2"
 )
 

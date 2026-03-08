@@ -9,16 +9,16 @@ package main
 import (
 	"context"
 	"github.com/google/wire"
-	"github.com/kodaikumatani/grpc-cqrs/internal"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe"
-	command2 "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/command"
-	query2 "github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/user"
-	command3 "github.com/kodaikumatani/grpc-cqrs/internal/app/user/command"
-	"github.com/kodaikumatani/grpc-cqrs/internal/db"
-	"github.com/kodaikumatani/grpc-cqrs/internal/db/command"
-	"github.com/kodaikumatani/grpc-cqrs/internal/db/query"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe"
+	command2 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
+	query2 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user"
+	command3 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/query"
 )
 
 // Injectors from wire.go:

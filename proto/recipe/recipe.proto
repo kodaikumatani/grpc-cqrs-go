@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package recipe;
 
-option go_package = "github.com/kodaikumatani/grpc-cqrs/pkg/pb/recipe";
+option go_package = "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipe";
 
 import "google/protobuf/timestamp.proto";
 

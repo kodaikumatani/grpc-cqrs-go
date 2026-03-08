@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
-	"github.com/kodaikumatani/grpc-cqrs/internal/interceptor"
-	"github.com/kodaikumatani/grpc-cqrs/internal/logger"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/interceptor"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/logger"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

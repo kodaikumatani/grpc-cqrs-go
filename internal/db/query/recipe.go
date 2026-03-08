@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kodaikumatani/grpc-cqrs/internal/app/recipe/query"
-	"github.com/kodaikumatani/grpc-cqrs/internal/db/gen"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
 )
 
 type recipe struct {
