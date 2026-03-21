@@ -20,3 +20,9 @@ type Recipe struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+func (r *Recipe) Update(title, description string) {
+	r.Title = title
+	r.Description = description
+	r.UpdatedAt = time.Now()
+}

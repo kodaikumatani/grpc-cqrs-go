@@ -22,7 +22,7 @@ func (c *Command) Create(
 	email string,
 ) (*domain.User, error) {
 	user := domain.User{
-		ID:        ulid.Make().String(),
+		ID:        ulid.Make(),
 		Name:      name,
 		Email:     email,
 		CreatedAt: time.Now(),

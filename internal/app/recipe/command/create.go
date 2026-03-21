@@ -48,3 +48,22 @@ func (u *Command) Create(
 
 	return &recipe, nil
 }
+
+func (u *Command) Update(
+	ctx context.Context,
+	id uuid.UUID,
+	title, description string,
+) error {
+	recipe, err := u.storage.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	recipe.Update(title, description)
+
+	if err := u.storage.Update(ctx, recipe); err != nil {
+		return err
+	}
+
+	return nil
+}

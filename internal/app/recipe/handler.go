@@ -69,6 +69,33 @@ func (h *handler) CreateRecipe(
 	}, nil
 }
 
+func (h *handler) UpdateRecipe(
+	ctx context.Context,
+	in *pb.UpdateRecipeRequest,
+) (*pb.UpdateRecipeResponse, error) {
+	request := struct {
+		ID          string `validate:"required,uuid"`
+		Title       string `validate:"required"`
+		Description string `validate:"required"`
+	}{
+		ID:          in.GetId(),
+		Title:       in.GetTitle(),
+		Description: in.GetDescription(),
+	}
+
+	if err := validator.New().Struct(request); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	recipeID := uuid.MustParse(request.ID)
+
+	if err := h.command.Update(ctx, recipeID, request.Title, request.Description); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.UpdateRecipeResponse{Success: true}, nil
+}
+
 func (h *handler) GetRecipe(
 	ctx context.Context,
 	in *pb.GetRecipeRequest,

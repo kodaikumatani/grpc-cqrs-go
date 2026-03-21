@@ -93,3 +93,26 @@ func (q *Queries) GetRecipeWithUser(ctx context.Context, id uuid.UUID) (GetRecip
 	)
 	return i, err
 }
+
+const updateRecipe = `-- name: UpdateRecipe :exec
+UPDATE recipes
+SET title = $2, description = $3, updated_at = $4
+WHERE id = $1
+`
+
+type UpdateRecipeParams struct {
+	ID          uuid.UUID
+	Title       string
+	Description string
+	UpdatedAt   time.Time
+}
+
+func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error {
+	_, err := q.db.Exec(ctx, updateRecipe,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.UpdatedAt,
+	)
+	return err
+}
