@@ -40,6 +40,9 @@ table "recipes" {
   column "description" {
     type = varchar(255)
   }
+  column "visibility" {
+    type = enum.visibility
+  }
   column "created_at" {
     type = timestamp
   }
@@ -57,3 +60,40 @@ table "recipes" {
   }
 }
 
+enum "visibility" {
+  schema = schema.gcook
+  values = ["public", "private", "restricted"]
+}
+
+table "relation_tuples" {
+  schema = schema.gcook
+  column "id" {
+    type = uuid
+  }
+  column "object_type" {
+    type = varchar(255)
+  }
+  column "object_id" {
+    type = varchar(255)
+  }
+  column "relation" {
+    type = varchar(255)
+  }
+  column "user_id" {
+    type = varchar(255)
+  }
+  column "created_at" {
+    type = timestamp
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  unique "unique" {
+    columns     = [
+      column.object_type, 
+      column.object_id, 
+      column.relation, 
+      column.user_id,
+    ]
+  }
+}
