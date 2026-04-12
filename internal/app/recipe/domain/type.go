@@ -17,9 +17,18 @@ type Recipe struct {
 	UserID      ulid.ULID
 	Title       string
 	Description string
+	Visibility  Visibility
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+type Visibility string
+
+var (
+	VisibilityPublic     Visibility = "public"
+	VisibilityPrivate    Visibility = "private"
+	VisibilityRestricted Visibility = "restricted"
+)
 
 func (r *Recipe) Update(title, description string) {
 	r.Title = title
