@@ -13,6 +13,22 @@ type Tuple struct {
 	UserID     ulid.ULID
 }
 
+func NewTuple(
+	id uuid.UUID,
+	objectType ObjectType,
+	objectID string,
+	relation Relation,
+	userID ulid.ULID,
+) *Tuple {
+	return &Tuple{
+		ID:         id,
+		ObjectType: objectType,
+		ObjectID:   objectID,
+		Relation:   relation,
+		UserID:     userID,
+	}
+}
+
 type ObjectType string
 
 const (

@@ -23,6 +23,10 @@ func (c Checker) CanEditRecipe(ctx context.Context, recipeID string) error {
 	return c.check(ctx, ObjectRecipe, recipeID, PermEditRecipe)
 }
 
+func (c Checker) CanShareRecipe(ctx context.Context, recipeID string) error {
+	return c.check(ctx, ObjectRecipe, recipeID, PermShareRecipe)
+}
+
 func (c Checker) check(
 	ctx context.Context,
 	objectType ObjectType,
