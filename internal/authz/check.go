@@ -33,8 +33,13 @@ func (c Checker) check(
 	objectID string,
 	perm Permission,
 ) error {
-	userID, ok := ctx.Value(authn.UIDKey{}).(ulid.ULID)
+	uid, ok := ctx.Value(authn.UIDKey{}).(string)
 	if !ok {
+		return authn.ErrUnauthenticated
+	}
+
+	userID, err := ulid.Parse(uid)
+	if err != nil {
 		return authn.ErrUnauthenticated
 	}
 
