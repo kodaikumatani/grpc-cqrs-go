@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
 )
@@ -28,6 +29,7 @@ func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*query.RecipeWithUser, 
 		UserID:      row.UserID.String(),
 		Title:       row.Title,
 		Description: row.Description,
+		Visibility:  domain.Visibility(row.Visibility),
 		CreatedAt:   row.CreatedAt,
 		UpdatedAt:   row.UpdatedAt,
 		UserName:    row.UserName,

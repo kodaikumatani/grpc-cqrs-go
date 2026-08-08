@@ -35,6 +35,19 @@ const (
 	ObjectRecipe ObjectType = "recipe"
 )
 
+func (t ObjectType) String() string {
+	return string(t)
+}
+
+func NewObjectType(object string) (ObjectType, error) {
+	switch object {
+	case ObjectRecipe.String():
+		return ObjectRecipe, nil
+	default:
+		return "", ErrUnknownObjectType
+	}
+}
+
 type Relation string
 
 const (
@@ -60,24 +73,20 @@ func NewRelation(relation string) (Relation, error) {
 	}
 }
 
-type Permission []Relation
+type Permission int
 
-var (
-	PermViewRecipe   Permission = []Relation{RelViewer, RelEditor, RelOwner}
-	PermEditRecipe   Permission = []Relation{RelEditor, RelOwner}
-	PermDeleteRecipe Permission = []Relation{RelOwner}
-	PermShareRecipe  Permission = []Relation{RelOwner}
+const (
+	PermView Permission = iota
+	PermEdit
+	PermDelete
+	PermShare
 )
 
-func (t ObjectType) String() string {
-	return string(t)
-}
-
-func NewObjectType(object string) (ObjectType, error) {
-	switch object {
-	case ObjectRecipe.String():
-		return ObjectRecipe, nil
-	default:
-		return "", ErrUnknownObjectType
-	}
+var permissionRelations = map[ObjectType]map[Permission][]Relation{
+	ObjectRecipe: {
+		PermView:   {RelViewer, RelEditor, RelOwner},
+		PermEdit:   {RelEditor, RelOwner},
+		PermDelete: {RelOwner},
+		PermShare:  {RelOwner},
+	},
 }
