@@ -12,10 +12,12 @@ table "users" {
     type = varchar(255)
   }
   column "created_at" {
-    type = timestamp
+    type    = timestamp
+    default = sql("now()")
   }
   column "updated_at" {
-    type = timestamp
+    type    = timestamp
+    default = sql("now()")
   }
   primary_key {
     columns = [column.id]
@@ -44,10 +46,12 @@ table "recipes" {
     type = enum.visibility
   }
   column "created_at" {
-    type = timestamp
+    type    = timestamp
+    default = sql("now()")
   }
   column "updated_at" {
-    type = timestamp
+    type    = timestamp
+    default = sql("now()")
   }
   primary_key {
     columns = [column.id]
@@ -83,7 +87,8 @@ table "relation_tuples" {
     type = varchar(255)
   }
   column "created_at" {
-    type = timestamp
+    type    = timestamp
+    default = sql("now()")
   }
   primary_key {
     columns = [column.id]

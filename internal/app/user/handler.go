@@ -41,6 +41,6 @@ func (h *handler) CreateUser(
 	}
 
 	return &pb.CreateUserResponse{
-		UserId: result.ID.String(),
+		UserId: result.ID().String(),
 	}, nil
 }

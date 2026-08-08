@@ -7,31 +7,22 @@ package gen
 
 import (
 	"context"
-	"time"
 
 	ulid "github.com/oklog/ulid/v2"
 )
 
 const createUser = `-- name: CreateUser :exec
-INSERT INTO users (id, name, email, created_at, updated_at) 
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (id, name, email)
+VALUES ($1, $2, $3)
 `
 
 type CreateUserParams struct {
-	ID        ulid.ULID
-	Name      string
-	Email     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID    ulid.ULID
+	Name  string
+	Email string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.Exec(ctx, createUser,
-		arg.ID,
-		arg.Name,
-		arg.Email,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
+	_, err := q.db.Exec(ctx, createUser, arg.ID, arg.Name, arg.Email)
 	return err
 }

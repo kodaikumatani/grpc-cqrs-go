@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
@@ -40,15 +39,12 @@ func (u *Command) Create(
 		return nil, err
 	}
 
-	now := time.Now()
 	recipe := domain.NewRecipe(
 		lo.Must(uuid.NewV7()),
 		uid,
 		title,
 		description,
 		domain.VisibilityPrivate,
-		now,
-		now,
 	)
 
 	tp := authz.NewTuple(

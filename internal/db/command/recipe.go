@@ -25,8 +25,6 @@ func (r *recipe) Create(ctx context.Context, rec *domain.Recipe) error {
 		Title:       rec.Title(),
 		Description: rec.Description(),
 		Visibility:  gen.Visibility(rec.Visibility()),
-		CreatedAt:   rec.CreatedAt(),
-		UpdatedAt:   rec.UpdatedAt(),
 	})
 }
 
@@ -42,8 +40,6 @@ func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*domain.Recipe, error) 
 		row.Title,
 		row.Description,
 		domain.Visibility(row.Visibility),
-		row.CreatedAt,
-		row.UpdatedAt,
 	), nil
 }
 
@@ -52,6 +48,5 @@ func (r *recipe) Update(ctx context.Context, rec *domain.Recipe) error {
 		ID:          rec.ID(),
 		Title:       rec.Title(),
 		Description: rec.Description(),
-		UpdatedAt:   rec.UpdatedAt(),
 	})
 }
