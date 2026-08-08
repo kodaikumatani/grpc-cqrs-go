@@ -21,7 +21,7 @@ func NewTuple(pool *pgxpool.Pool) authz.Storage {
 
 func (t *tuple) CreateTuple(
 	ctx context.Context,
-	tuple authz.Tuple,
+	tuple *authz.Tuple,
 ) error {
 	return t.queries.CreateTuple(ctx, gen.CreateTupleParams{
 		ID:         uuid.New(),

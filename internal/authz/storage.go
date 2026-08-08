@@ -8,7 +8,7 @@ import (
 )
 
 type Storage interface {
-	CreateTuple(ctx context.Context, tuple Tuple) error
+	CreateTuple(ctx context.Context, tuple *Tuple) error
 	DeleteTuple(ctx context.Context, id uuid.UUID) error
 	ListRelations(
 		ctx context.Context,

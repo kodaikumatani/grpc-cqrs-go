@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/oklog/ulid/v2"
 )
@@ -30,26 +29,31 @@ func (u *Command) ShareRecipe(
 	targetUserID string,
 	relation string,
 ) error {
+	uid, err := ulid.Parse(targetUserID)
+	if err != nil {
+		return err
+	}
+
 	if err := u.checker.CanShareRecipe(ctx, recipeID); err != nil {
 		return err
 	}
 
-	userID, ok := ctx.Value(authn.UIDKey{}).(ulid.ULID)
-	if !ok {
-		return authn.ErrUnauthenticated
+	rel, err := authz.NewRelation(relation)
+	if err != nil {
+		return err
 	}
 
 	tuple := authz.NewTuple(
 		uuid.New(),
 		authz.ObjectRecipe,
 		recipeID,
-		relation,
-		userID,
+		rel,
+		uid,
 	)
 
-	//if err := u.storage.CreateTuple(ctx, *tuple) {
-	//	return nil, err
-	//}
+	if err := u.storage.CreateTuple(ctx, tuple); err != nil {
+		return err
+	}
 
-	return &recipe, nil
+	return nil
 }
