@@ -13,7 +13,7 @@ SET title = $2, description = $3, updated_at = $4
 WHERE id = $1;
 
 -- name: GetRecipeWithUser :one
-SELECT r.id, r.user_id, r.title, r.description, r.created_at, r.updated_at,
+SELECT r.id, r.user_id, r.title, r.description, r.visibility, r.created_at, r.updated_at,
        u.name AS user_name, u.email AS user_email
 FROM recipes r
 JOIN users u ON r.user_id = u.id

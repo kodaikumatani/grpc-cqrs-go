@@ -69,7 +69,7 @@ func (q *Queries) GetRecipe(ctx context.Context, id uuid.UUID) (GetRecipeRow, er
 }
 
 const getRecipeWithUser = `-- name: GetRecipeWithUser :one
-SELECT r.id, r.user_id, r.title, r.description, r.created_at, r.updated_at,
+SELECT r.id, r.user_id, r.title, r.description, r.visibility, r.created_at, r.updated_at,
        u.name AS user_name, u.email AS user_email
 FROM recipes r
 JOIN users u ON r.user_id = u.id
@@ -81,6 +81,7 @@ type GetRecipeWithUserRow struct {
 	UserID      ulid.ULID
 	Title       string
 	Description string
+	Visibility  Visibility
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	UserName    string
@@ -95,6 +96,7 @@ func (q *Queries) GetRecipeWithUser(ctx context.Context, id uuid.UUID) (GetRecip
 		&i.UserID,
 		&i.Title,
 		&i.Description,
+		&i.Visibility,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.UserName,

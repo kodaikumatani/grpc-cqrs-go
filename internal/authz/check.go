@@ -16,18 +16,22 @@ func NewChecker(storage Storage) Checker {
 }
 
 func (c Checker) CanViewRecipe(ctx context.Context, recipeID string) error {
-	return c.check(ctx, ObjectRecipe, recipeID, PermViewRecipe)
+	return c.hasPermission(ctx, ObjectRecipe, recipeID, PermView)
 }
 
 func (c Checker) CanEditRecipe(ctx context.Context, recipeID string) error {
-	return c.check(ctx, ObjectRecipe, recipeID, PermEditRecipe)
+	return c.hasPermission(ctx, ObjectRecipe, recipeID, PermEdit)
 }
 
 func (c Checker) CanShareRecipe(ctx context.Context, recipeID string) error {
-	return c.check(ctx, ObjectRecipe, recipeID, PermShareRecipe)
+	return c.hasPermission(ctx, ObjectRecipe, recipeID, PermShare)
 }
 
-func (c Checker) check(
+func (c Checker) IsRecipeOwner(ctx context.Context, recipeID string) error {
+	return c.hasRelation(ctx, ObjectRecipe, recipeID, RelOwner)
+}
+
+func (c Checker) hasPermission(
 	ctx context.Context,
 	objectType ObjectType,
 	objectID string,
@@ -53,11 +57,46 @@ func (c Checker) check(
 		return err
 	}
 
-	for _, relation := range perm {
+	for _, relation := range permissionRelations[objectType][perm] {
 		for _, tuple := range tuples {
 			if relation == tuple.Relation {
 				return nil
 			}
+		}
+	}
+
+	return ErrPermissionDenied
+}
+
+func (c Checker) hasRelation(
+	ctx context.Context,
+	objectType ObjectType,
+	objectID string,
+	relation Relation,
+) error {
+	uid, ok := ctx.Value(authn.UIDKey{}).(string)
+	if !ok {
+		return authn.ErrUnauthenticated
+	}
+
+	userID, err := ulid.Parse(uid)
+	if err != nil {
+		return authn.ErrUnauthenticated
+	}
+
+	tuples, err := c.storage.ListRelations(
+		ctx,
+		objectType,
+		objectID,
+		userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	for _, tuple := range tuples {
+		if relation == tuple.Relation {
+			return nil
 		}
 	}
 
