@@ -1,15 +1,15 @@
 -- name: CreateRecipe :exec
-INSERT INTO recipes (id, user_id, title, description, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6);
+INSERT INTO recipes (id, user_id, title, description, visibility)
+VALUES ($1, $2, $3, $4, $5);
 
 -- name: GetRecipe :one
-SELECT id, user_id, title, description, created_at, updated_at
+SELECT id, user_id, title, description, visibility
 FROM recipes
 WHERE id = $1;
 
 -- name: UpdateRecipe :exec
 UPDATE recipes
-SET title = $2, description = $3, updated_at = $4
+SET title = $2, description = $3, updated_at = now()
 WHERE id = $1;
 
 -- name: GetRecipeWithUser :one

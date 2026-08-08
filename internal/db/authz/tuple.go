@@ -2,7 +2,6 @@ package authz
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -29,7 +28,6 @@ func (t *tuple) CreateTuple(
 		ObjectID:   tuple.ObjectID,
 		Relation:   tuple.Relation.String(),
 		UserID:     tuple.UserID,
-		CreatedAt:  time.Now(),
 	})
 }
 

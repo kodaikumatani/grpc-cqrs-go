@@ -1,6 +1,6 @@
 -- name: CreateTuple :exec
-INSERT INTO relation_tuples (id, object_type, object_id, relation, user_id, created_at)
-VALUES ($1, $2, $3, $4, $5, $6);
+INSERT INTO relation_tuples (id, object_type, object_id, relation, user_id)
+VALUES ($1, $2, $3, $4, $5);
 
 -- name: DeleteTuple :exec 
 DELETE FROM relation_tuples WHERE id = $1;

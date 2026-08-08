@@ -19,10 +19,8 @@ func NewUser(pool *pgxpool.Pool) command.Storage {
 
 func (u *user) Create(ctx context.Context, usr *domain.User) error {
 	return u.queries.CreateUser(ctx, gen.CreateUserParams{
-		ID:        usr.ID,
-		Name:      usr.Name,
-		Email:     usr.Email,
-		CreatedAt: usr.CreatedAt,
-		UpdatedAt: usr.UpdatedAt,
+		ID:    usr.ID(),
+		Name:  usr.Name(),
+		Email: usr.Email(),
 	})
 }

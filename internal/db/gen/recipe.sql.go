@@ -14,8 +14,8 @@ import (
 )
 
 const createRecipe = `-- name: CreateRecipe :exec
-INSERT INTO recipes (id, user_id, title, description, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO recipes (id, user_id, title, description, visibility)
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type CreateRecipeParams struct {
@@ -23,8 +23,7 @@ type CreateRecipeParams struct {
 	UserID      ulid.ULID
 	Title       string
 	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Visibility  Visibility
 }
 
 func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) error {
@@ -33,14 +32,13 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) erro
 		arg.UserID,
 		arg.Title,
 		arg.Description,
-		arg.CreatedAt,
-		arg.UpdatedAt,
+		arg.Visibility,
 	)
 	return err
 }
 
 const getRecipe = `-- name: GetRecipe :one
-SELECT id, user_id, title, description, created_at, updated_at
+SELECT id, user_id, title, description, visibility
 FROM recipes
 WHERE id = $1
 `
@@ -50,8 +48,7 @@ type GetRecipeRow struct {
 	UserID      ulid.ULID
 	Title       string
 	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Visibility  Visibility
 }
 
 func (q *Queries) GetRecipe(ctx context.Context, id uuid.UUID) (GetRecipeRow, error) {
@@ -62,8 +59,7 @@ func (q *Queries) GetRecipe(ctx context.Context, id uuid.UUID) (GetRecipeRow, er
 		&i.UserID,
 		&i.Title,
 		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
+		&i.Visibility,
 	)
 	return i, err
 }
@@ -107,7 +103,7 @@ func (q *Queries) GetRecipeWithUser(ctx context.Context, id uuid.UUID) (GetRecip
 
 const updateRecipe = `-- name: UpdateRecipe :exec
 UPDATE recipes
-SET title = $2, description = $3, updated_at = $4
+SET title = $2, description = $3, updated_at = now()
 WHERE id = $1
 `
 
@@ -115,15 +111,9 @@ type UpdateRecipeParams struct {
 	ID          uuid.UUID
 	Title       string
 	Description string
-	UpdatedAt   time.Time
 }
 
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error {
-	_, err := q.db.Exec(ctx, updateRecipe,
-		arg.ID,
-		arg.Title,
-		arg.Description,
-		arg.UpdatedAt,
-	)
+	_, err := q.db.Exec(ctx, updateRecipe, arg.ID, arg.Title, arg.Description)
 	return err
 }

@@ -7,15 +7,14 @@ package gen
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	ulid "github.com/oklog/ulid/v2"
 )
 
 const createTuple = `-- name: CreateTuple :exec
-INSERT INTO relation_tuples (id, object_type, object_id, relation, user_id, created_at)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO relation_tuples (id, object_type, object_id, relation, user_id)
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type CreateTupleParams struct {
@@ -24,7 +23,6 @@ type CreateTupleParams struct {
 	ObjectID   string
 	Relation   string
 	UserID     ulid.ULID
-	CreatedAt  time.Time
 }
 
 func (q *Queries) CreateTuple(ctx context.Context, arg CreateTupleParams) error {
@@ -34,7 +32,6 @@ func (q *Queries) CreateTuple(ctx context.Context, arg CreateTupleParams) error 
 		arg.ObjectID,
 		arg.Relation,
 		arg.UserID,
-		arg.CreatedAt,
 	)
 	return err
 }
