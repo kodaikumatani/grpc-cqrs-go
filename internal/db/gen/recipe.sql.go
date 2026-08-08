@@ -14,8 +14,8 @@ import (
 )
 
 const createRecipe = `-- name: CreateRecipe :exec
-INSERT INTO recipes (id, user_id, title, description, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO recipes (id, user_id, title, description, visibility, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type CreateRecipeParams struct {
@@ -23,6 +23,7 @@ type CreateRecipeParams struct {
 	UserID      ulid.ULID
 	Title       string
 	Description string
+	Visibility  Visibility
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -33,6 +34,7 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) erro
 		arg.UserID,
 		arg.Title,
 		arg.Description,
+		arg.Visibility,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -40,7 +42,7 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) erro
 }
 
 const getRecipe = `-- name: GetRecipe :one
-SELECT id, user_id, title, description, created_at, updated_at
+SELECT id, user_id, title, description, visibility, created_at, updated_at
 FROM recipes
 WHERE id = $1
 `
@@ -50,6 +52,7 @@ type GetRecipeRow struct {
 	UserID      ulid.ULID
 	Title       string
 	Description string
+	Visibility  Visibility
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -62,6 +65,7 @@ func (q *Queries) GetRecipe(ctx context.Context, id uuid.UUID) (GetRecipeRow, er
 		&i.UserID,
 		&i.Title,
 		&i.Description,
+		&i.Visibility,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

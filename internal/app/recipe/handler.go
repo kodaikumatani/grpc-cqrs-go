@@ -65,7 +65,7 @@ func (h *handler) CreateRecipe(
 	}
 
 	return &pb.CreateRecipeResponse{
-		RecipeId: result.ID.String(),
+		RecipeId: result.ID().String(),
 	}, nil
 }
 

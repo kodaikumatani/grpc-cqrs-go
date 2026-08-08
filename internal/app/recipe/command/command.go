@@ -40,24 +40,26 @@ func (u *Command) Create(
 		return nil, err
 	}
 
-	recipe := domain.Recipe{
-		ID:          lo.Must(uuid.NewV7()),
-		UserID:      uid,
-		Title:       title,
-		Description: description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+	now := time.Now()
+	recipe := domain.NewRecipe(
+		lo.Must(uuid.NewV7()),
+		uid,
+		title,
+		description,
+		domain.VisibilityPrivate,
+		now,
+		now,
+	)
 
 	tp := authz.NewTuple(
 		uuid.New(),
 		authz.ObjectRecipe,
-		recipe.ID.String(),
+		recipe.ID().String(),
 		authz.RelOwner,
 		uid,
 	)
 
-	if err := u.storage.Create(ctx, &recipe); err != nil {
+	if err := u.storage.Create(ctx, recipe); err != nil {
 		return nil, err
 	}
 
@@ -65,7 +67,7 @@ func (u *Command) Create(
 		return nil, err
 	}
 
-	return &recipe, nil
+	return recipe, nil
 }
 
 func (u *Command) Update(

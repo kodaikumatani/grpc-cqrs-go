@@ -20,12 +20,13 @@ func NewRecipe(pool *pgxpool.Pool) command.Storage {
 
 func (r *recipe) Create(ctx context.Context, rec *domain.Recipe) error {
 	return r.queries.CreateRecipe(ctx, gen.CreateRecipeParams{
-		ID:          rec.ID,
-		UserID:      rec.UserID,
-		Title:       rec.Title,
-		Description: rec.Description,
-		CreatedAt:   rec.CreatedAt,
-		UpdatedAt:   rec.UpdatedAt,
+		ID:          rec.ID(),
+		UserID:      rec.UserID(),
+		Title:       rec.Title(),
+		Description: rec.Description(),
+		Visibility:  gen.Visibility(rec.Visibility()),
+		CreatedAt:   rec.CreatedAt(),
+		UpdatedAt:   rec.UpdatedAt(),
 	})
 }
 
@@ -35,21 +36,22 @@ func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*domain.Recipe, error) 
 		return nil, err
 	}
 
-	return &domain.Recipe{
-		ID:          row.ID,
-		UserID:      row.UserID,
-		Title:       row.Title,
-		Description: row.Description,
-		CreatedAt:   row.CreatedAt,
-		UpdatedAt:   row.UpdatedAt,
-	}, nil
+	return domain.NewRecipe(
+		row.ID,
+		row.UserID,
+		row.Title,
+		row.Description,
+		domain.Visibility(row.Visibility),
+		row.CreatedAt,
+		row.UpdatedAt,
+	), nil
 }
 
 func (r *recipe) Update(ctx context.Context, rec *domain.Recipe) error {
 	return r.queries.UpdateRecipe(ctx, gen.UpdateRecipeParams{
-		ID:          rec.ID,
-		Title:       rec.Title,
-		Description: rec.Description,
-		UpdatedAt:   rec.UpdatedAt,
+		ID:          rec.ID(),
+		Title:       rec.Title(),
+		Description: rec.Description(),
+		UpdatedAt:   rec.UpdatedAt(),
 	})
 }
