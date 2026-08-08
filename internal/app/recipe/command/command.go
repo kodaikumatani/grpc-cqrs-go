@@ -13,15 +13,18 @@ import (
 
 type Command struct {
 	storage Storage
+	tuple   authz.Storage
 	checker authz.Checker
 }
 
 func NewCommand(
 	storage Storage,
+	tuple authz.Storage,
 	checker authz.Checker,
 ) *Command {
 	return &Command{
 		storage: storage,
+		tuple:   tuple,
 		checker: checker,
 	}
 }
@@ -46,7 +49,19 @@ func (u *Command) Create(
 		UpdatedAt:   time.Now(),
 	}
 
+	tp := authz.NewTuple(
+		uuid.New(),
+		authz.ObjectRecipe,
+		recipe.ID.String(),
+		authz.RelOwner,
+		uid,
+	)
+
 	if err := u.storage.Create(ctx, &recipe); err != nil {
+		return nil, err
+	}
+
+	if err := u.tuple.CreateTuple(ctx, tp); err != nil {
 		return nil, err
 	}
 

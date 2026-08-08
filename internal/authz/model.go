@@ -13,6 +13,22 @@ type Tuple struct {
 	UserID     ulid.ULID
 }
 
+func NewTuple(
+	id uuid.UUID,
+	objectType ObjectType,
+	objectID string,
+	relation Relation,
+	userID ulid.ULID,
+) *Tuple {
+	return &Tuple{
+		ID:         id,
+		ObjectType: objectType,
+		ObjectID:   objectID,
+		Relation:   relation,
+		UserID:     userID,
+	}
+}
+
 type ObjectType string
 
 const (
@@ -26,6 +42,23 @@ const (
 	RelViewer Relation = "viewer"
 	RelEditor Relation = "editor"
 )
+
+func (r Relation) String() string {
+	return string(r)
+}
+
+func NewRelation(relation string) (Relation, error) {
+	switch relation {
+	case RelOwner.String():
+		return RelOwner, nil
+	case RelViewer.String():
+		return RelViewer, nil
+	case RelEditor.String():
+		return RelEditor, nil
+	default:
+		return "", ErrUnknownRelation
+	}
+}
 
 type Permission []Relation
 
@@ -46,22 +79,5 @@ func NewObjectType(object string) (ObjectType, error) {
 		return ObjectRecipe, nil
 	default:
 		return "", ErrUnknownObjectType
-	}
-}
-
-func (r Relation) String() string {
-	return string(r)
-}
-
-func NewRelation(relation string) (Relation, error) {
-	switch relation {
-	case RelOwner.String():
-		return RelOwner, nil
-	case RelViewer.String():
-		return RelViewer, nil
-	case RelEditor.String():
-		return RelEditor, nil
-	default:
-		return "", ErrUnknownRelation
 	}
 }

@@ -23,14 +23,23 @@ func (c Checker) CanEditRecipe(ctx context.Context, recipeID string) error {
 	return c.check(ctx, ObjectRecipe, recipeID, PermEditRecipe)
 }
 
+func (c Checker) CanShareRecipe(ctx context.Context, recipeID string) error {
+	return c.check(ctx, ObjectRecipe, recipeID, PermShareRecipe)
+}
+
 func (c Checker) check(
 	ctx context.Context,
 	objectType ObjectType,
 	objectID string,
 	perm Permission,
 ) error {
-	userID, ok := ctx.Value(authn.UIDKey{}).(ulid.ULID)
+	uid, ok := ctx.Value(authn.UIDKey{}).(string)
 	if !ok {
+		return authn.ErrUnauthenticated
+	}
+
+	userID, err := ulid.Parse(uid)
+	if err != nil {
 		return authn.ErrUnauthenticated
 	}
 
