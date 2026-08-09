@@ -5,11 +5,11 @@ import (
 )
 
 type Tuple struct {
-	ID         uuid.UUID
-	ObjectType ObjectType
-	ObjectID   string
-	Relation   Relation
-	UserID     string
+	id         uuid.UUID
+	objectType ObjectType
+	objectID   string
+	relation   Relation
+	userID     string
 }
 
 func NewTuple(
@@ -20,13 +20,19 @@ func NewTuple(
 	userID string,
 ) *Tuple {
 	return &Tuple{
-		ID:         id,
-		ObjectType: objectType,
-		ObjectID:   objectID,
-		Relation:   relation,
-		UserID:     userID,
+		id:         id,
+		objectType: objectType,
+		objectID:   objectID,
+		relation:   relation,
+		userID:     userID,
 	}
 }
+
+func (t *Tuple) ID() uuid.UUID          { return t.id }
+func (t *Tuple) ObjectType() ObjectType { return t.objectType }
+func (t *Tuple) ObjectID() string       { return t.objectID }
+func (t *Tuple) Relation() Relation     { return t.relation }
+func (t *Tuple) UserID() string         { return t.userID }
 
 type ObjectType string
 

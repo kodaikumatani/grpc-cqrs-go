@@ -23,10 +23,10 @@ func (t *tuple) CreateTuple(
 ) error {
 	return t.queries.CreateTuple(ctx, gen.CreateTupleParams{
 		ID:         uuid.New(),
-		ObjectType: tuple.ObjectType.String(),
-		ObjectID:   tuple.ObjectID,
-		Relation:   tuple.Relation.String(),
-		UserID:     tuple.UserID,
+		ObjectType: tuple.ObjectType().String(),
+		ObjectID:   tuple.ObjectID(),
+		Relation:   tuple.Relation().String(),
+		UserID:     tuple.UserID(),
 	})
 }
 
@@ -64,13 +64,13 @@ func (t *tuple) ListRelations(
 			return nil, err
 		}
 
-		tuples[i] = &authz.Tuple{
-			ID:         row.ID,
-			ObjectType: objectType,
-			ObjectID:   row.ObjectID,
-			Relation:   relation,
-			UserID:     row.UserID,
-		}
+		tuples[i] = authz.NewTuple(
+			row.ID,
+			objectType,
+			row.ObjectID,
+			relation,
+			row.UserID,
+		)
 	}
 
 	return tuples, nil

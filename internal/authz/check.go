@@ -47,7 +47,7 @@ func (c Checker) hasPermission(
 
 	for _, relation := range permissionRelations[objectType][perm] {
 		for _, tuple := range tuples {
-			if relation == tuple.Relation {
+			if relation == tuple.Relation() {
 				return nil
 			}
 		}
@@ -74,7 +74,7 @@ func (c Checker) hasRelation(
 	}
 
 	for _, tuple := range tuples {
-		if relation == tuple.Relation {
+		if relation == tuple.Relation() {
 			return nil
 		}
 	}
