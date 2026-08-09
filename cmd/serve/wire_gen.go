@@ -11,17 +11,17 @@ import (
 	"github.com/google/wire"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe"
-	command2 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
-	query2 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
+	recipe2 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/share"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user"
-	command3 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
-	authz2 "github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
+	user2 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/user"
+	command2 "github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/authz"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/command"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/query"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/recipe"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/tuple"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/user"
 )
 
 // Injectors from wire.go:
@@ -31,16 +31,16 @@ func initializeServices(ctx context.Context, dsn string) (*services, func(), err
 	if err != nil {
 		return nil, nil, err
 	}
-	storage := command.NewRecipe(pool)
-	authzStorage := authz.NewTuple(pool)
-	checker := authz2.NewChecker(authzStorage)
-	commandCommand := command2.NewCommand(storage, authzStorage, checker)
-	queryStorage := query.NewRecipe(pool)
-	queryQuery := query2.NewQuery(queryStorage, checker)
-	recipeServiceServer := recipe.NewHandler(commandCommand, queryQuery)
-	commandStorage := command.NewUser(pool)
-	command4 := command3.NewCommand(commandStorage)
-	userServiceServer := user.NewHandler(command4)
+	storage := recipe.NewCommand(pool)
+	authzStorage := tuple.NewStore(pool)
+	checker := authz.NewChecker(authzStorage)
+	commandCommand := command.NewCommand(storage, authzStorage, checker)
+	queryStorage := recipe.NewQuery(pool)
+	queryQuery := query.NewQuery(queryStorage, checker)
+	recipeServiceServer := recipe2.NewHandler(commandCommand, queryQuery)
+	commandStorage := user.NewCommand(pool)
+	command3 := command2.NewCommand(commandStorage)
+	userServiceServer := user2.NewHandler(command3)
 	shareCommand := share.NewCommand(authzStorage, checker)
 	shareServiceServer := share.NewHandler(shareCommand)
 	registrar := app.NewRegistrar(recipeServiceServer, userServiceServer, shareServiceServer)

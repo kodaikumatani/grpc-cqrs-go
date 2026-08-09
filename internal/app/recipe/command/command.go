@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/oklog/ulid/v2"
 	"github.com/samber/lo"
@@ -33,13 +33,13 @@ func (u *Command) Create(
 	userID ulid.ULID,
 	title,
 	description string,
-) (*domain.Recipe, error) {
-	recipe := domain.NewRecipe(
+) (*entity.Recipe, error) {
+	recipe := entity.NewRecipe(
 		lo.Must(uuid.NewV7()),
 		userID,
 		title,
 		description,
-		domain.VisibilityPrivate,
+		entity.VisibilityPrivate,
 	)
 
 	tp := authz.NewTuple(
@@ -90,7 +90,7 @@ func (u *Command) UpdateVisibility(
 	ctx context.Context,
 	userID ulid.ULID,
 	id uuid.UUID,
-	visibility domain.Visibility,
+	visibility entity.Visibility,
 ) error {
 	if err := u.checker.IsRecipeOwner(ctx, userID.String(), id.String()); err != nil {
 		return err

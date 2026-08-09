@@ -1,4 +1,4 @@
-package command
+package user
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
 	"github.com/oklog/ulid/v2"
 )
@@ -41,7 +41,7 @@ func TestUserCreate_ErrorTranslation(t *testing.T) {
 			name:    "unique violation is translated to ErrAlreadyExists",
 			execErr: &pgconn.PgError{Code: "23505"},
 			check: func(t *testing.T, got error) {
-				if !errors.Is(got, domain.ErrAlreadyExists) {
+				if !errors.Is(got, entity.ErrAlreadyExists) {
 					t.Fatalf("want ErrAlreadyExists, got %v", got)
 				}
 			},
@@ -50,7 +50,7 @@ func TestUserCreate_ErrorTranslation(t *testing.T) {
 			name:    "other pg error is passed through",
 			execErr: &pgconn.PgError{Code: "23503"}, // foreign_key_violation
 			check: func(t *testing.T, got error) {
-				if errors.Is(got, domain.ErrAlreadyExists) {
+				if errors.Is(got, entity.ErrAlreadyExists) {
 					t.Fatalf("must not translate non-23505 to ErrAlreadyExists: %v", got)
 				}
 				var pgErr *pgconn.PgError
@@ -81,11 +81,11 @@ func TestUserCreate_ErrorTranslation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &user{queries: gen.New(fakeDBTX{execErr: tt.execErr})}
+			repo := &store{queries: gen.New(fakeDBTX{execErr: tt.execErr})}
 
 			got := repo.Create(
 				context.Background(),
-				domain.NewUser(ulid.Make(), "name", "a@example.com"),
+				entity.NewUser(ulid.Make(), "name", "a@example.com"),
 			)
 
 			tt.check(t, got)

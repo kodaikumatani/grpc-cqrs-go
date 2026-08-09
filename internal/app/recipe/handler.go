@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
@@ -124,7 +124,7 @@ func (h *handler) GetRecipe(
 
 	result, err := h.query.Get(ctx, userID, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrRecipeNotFound) {
+		if errors.Is(err, entity.ErrRecipeNotFound) {
 			return nil, grpcerr.WithStatus(err, codes.NotFound, msgRecipeNotFound)
 		}
 		return nil, err
@@ -164,7 +164,7 @@ func (h *handler) ChangeVisibility(
 
 	visibility, ok := pbToDomainVisibility[in.GetVisibility()]
 	if !ok {
-		return nil, grpcerr.WithStatus(domain.ErrInvalidVisibility, codes.InvalidArgument, msgInvalidVisibility)
+		return nil, grpcerr.WithStatus(entity.ErrInvalidVisibility, codes.InvalidArgument, msgInvalidVisibility)
 	}
 
 	userID, err := authn.UserID(ctx)
@@ -179,14 +179,14 @@ func (h *handler) ChangeVisibility(
 	return &pb.ChangeVisibilityResponse{Success: true}, nil
 }
 
-var pbToDomainVisibility = map[pb.Visibility]domain.Visibility{
-	pb.Visibility_VISIBILITY_PUBLIC:     domain.VisibilityPublic,
-	pb.Visibility_VISIBILITY_PRIVATE:    domain.VisibilityPrivate,
-	pb.Visibility_VISIBILITY_RESTRICTED: domain.VisibilityRestricted,
+var pbToDomainVisibility = map[pb.Visibility]entity.Visibility{
+	pb.Visibility_VISIBILITY_PUBLIC:     entity.VisibilityPublic,
+	pb.Visibility_VISIBILITY_PRIVATE:    entity.VisibilityPrivate,
+	pb.Visibility_VISIBILITY_RESTRICTED: entity.VisibilityRestricted,
 }
 
-var domainVisibilityToPb = func() map[domain.Visibility]pb.Visibility {
-	out := make(map[domain.Visibility]pb.Visibility, len(pbToDomainVisibility))
+var domainVisibilityToPb = func() map[entity.Visibility]pb.Visibility {
+	out := make(map[entity.Visibility]pb.Visibility, len(pbToDomainVisibility))
 
 	for k, v := range pbToDomainVisibility {
 		if dup, ok := out[v]; ok {

@@ -3,7 +3,7 @@ package query
 import (
 	"time"
 
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/entity"
 )
 
 type RecipeWithUser struct {
@@ -11,7 +11,7 @@ type RecipeWithUser struct {
 	UserID      string
 	Title       string
 	Description string
-	Visibility  domain.Visibility
+	Visibility  entity.Visibility
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	UserName    string
