@@ -1,4 +1,4 @@
-package authz
+package tuple
 
 import (
 	"context"
@@ -81,7 +81,7 @@ func TestCreateTuple_ErrorTranslation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &tuple{queries: gen.New(fakeDBTX{execErr: tt.execErr})}
+			repo := &store{queries: gen.New(fakeDBTX{execErr: tt.execErr})}
 
 			got := repo.CreateTuple(
 				context.Background(),

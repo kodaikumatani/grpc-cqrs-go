@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/user"
@@ -50,7 +50,7 @@ func (h *handler) CreateUser(
 
 	result, err := h.command.Create(ctx, id, request.Name, request.Email)
 	if err != nil {
-		if errors.Is(err, domain.ErrAlreadyExists) {
+		if errors.Is(err, entity.ErrAlreadyExists) {
 			return nil, grpcerr.WithStatus(err, codes.AlreadyExists, msgUserAlreadyExists)
 		}
 		return nil, err

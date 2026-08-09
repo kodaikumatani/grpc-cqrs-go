@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/oklog/ulid/v2"
 )
@@ -35,13 +35,13 @@ func (q *Query) Get(
 	}
 
 	switch result.Visibility {
-	case domain.VisibilityPublic:
+	case entity.VisibilityPublic:
 		// 誰でも可（素通り）
-	case domain.VisibilityPrivate:
+	case entity.VisibilityPrivate:
 		if err := q.checker.IsRecipeOwner(ctx, userID.String(), id.String()); err != nil {
 			return nil, err
 		}
-	case domain.VisibilityRestricted:
+	case entity.VisibilityRestricted:
 		if err := q.checker.CanViewRecipe(ctx, userID.String(), id.String()); err != nil {
 			return nil, err
 		}

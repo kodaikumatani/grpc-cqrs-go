@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/entity"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -20,8 +20,8 @@ func (c *Command) Create(
 	id ulid.ULID,
 	name,
 	email string,
-) (*domain.User, error) {
-	user := domain.NewUser(id, name, email)
+) (*entity.User, error) {
+	user := entity.NewUser(id, name, email)
 
 	if err := c.storage.Create(ctx, user); err != nil {
 		return nil, err
