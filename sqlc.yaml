@@ -25,8 +25,3 @@ sql:
               import: "github.com/oklog/ulid/v2"
               package: "ulid"
               type: "ULID"
-          - column: "relation_tuples.user_id"
-            go_type:
-              import: "github.com/oklog/ulid/v2"
-              package: "ulid"
-              type: "ULID"

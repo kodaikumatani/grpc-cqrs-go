@@ -2,7 +2,6 @@ package authz
 
 import (
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 )
 
 type Tuple struct {
@@ -10,7 +9,7 @@ type Tuple struct {
 	ObjectType ObjectType
 	ObjectID   string
 	Relation   Relation
-	UserID     ulid.ULID
+	UserID     string
 }
 
 func NewTuple(
@@ -18,7 +17,7 @@ func NewTuple(
 	objectType ObjectType,
 	objectID string,
 	relation Relation,
-	userID ulid.ULID,
+	userID string,
 ) *Tuple {
 	return &Tuple{
 		ID:         id,

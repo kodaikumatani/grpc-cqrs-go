@@ -30,18 +30,13 @@ func NewCommand(
 
 func (u *Command) Create(
 	ctx context.Context,
-	userID,
+	userID ulid.ULID,
 	title,
 	description string,
 ) (*domain.Recipe, error) {
-	uid, err := ulid.Parse(userID)
-	if err != nil {
-		return nil, err
-	}
-
 	recipe := domain.NewRecipe(
 		lo.Must(uuid.NewV7()),
-		uid,
+		userID,
 		title,
 		description,
 		domain.VisibilityPrivate,
@@ -52,7 +47,7 @@ func (u *Command) Create(
 		authz.ObjectRecipe,
 		recipe.ID().String(),
 		authz.RelOwner,
-		uid,
+		userID.String(),
 	)
 
 	if err := u.storage.Create(ctx, recipe); err != nil {
@@ -68,11 +63,12 @@ func (u *Command) Create(
 
 func (u *Command) Update(
 	ctx context.Context,
+	userID ulid.ULID,
 	id uuid.UUID,
 	title, description string,
 ) error {
 	if err := u.checker.
-		CanEditRecipe(ctx, id.String()); err != nil {
+		CanEditRecipe(ctx, userID.String(), id.String()); err != nil {
 		return err
 	}
 
@@ -92,10 +88,11 @@ func (u *Command) Update(
 
 func (u *Command) UpdateVisibility(
 	ctx context.Context,
+	userID ulid.ULID,
 	id uuid.UUID,
 	visibility domain.Visibility,
 ) error {
-	if err := u.checker.IsRecipeOwner(ctx, id.String()); err != nil {
+	if err := u.checker.IsRecipeOwner(ctx, userID.String(), id.String()); err != nil {
 		return err
 	}
 

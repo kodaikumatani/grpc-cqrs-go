@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
-	"github.com/oklog/ulid/v2"
 )
 
 type Command struct {
@@ -25,16 +24,12 @@ func NewCommand(
 
 func (u *Command) ShareRecipe(
 	ctx context.Context,
-	recipeID string,
-	targetUserID string,
+	userID,
+	recipeID,
+	targetUserID,
 	relation string,
 ) error {
-	uid, err := ulid.Parse(targetUserID)
-	if err != nil {
-		return err
-	}
-
-	if err := u.checker.CanShareRecipe(ctx, recipeID); err != nil {
+	if err := u.checker.CanShareRecipe(ctx, userID, recipeID); err != nil {
 		return err
 	}
 
@@ -48,7 +43,7 @@ func (u *Command) ShareRecipe(
 		authz.ObjectRecipe,
 		recipeID,
 		rel,
-		uid,
+		targetUserID,
 	)
 
 	if err := u.storage.CreateTuple(ctx, tuple); err != nil {

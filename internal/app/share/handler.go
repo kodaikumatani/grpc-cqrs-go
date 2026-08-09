@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/share"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,7 +38,13 @@ func (h *handler) ShareRecipe(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
+	userID, ok := authn.UserID(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, authn.ErrUnauthenticated.Error())
+	}
+
 	if err := h.command.ShareRecipe(ctx,
+		userID.String(),
 		request.RecipeId,
 		request.TargetUserId,
 		request.Relation); err != nil {

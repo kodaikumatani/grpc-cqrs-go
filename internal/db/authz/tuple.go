@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
-	"github.com/oklog/ulid/v2"
 )
 
 type tuple struct {
@@ -42,7 +41,7 @@ func (t *tuple) ListRelations(
 	ctx context.Context,
 	objectType authz.ObjectType,
 	objectID string,
-	userID ulid.ULID,
+	userID string,
 ) ([]*authz.Tuple, error) {
 	rows, err := t.queries.ListRelations(ctx, gen.ListRelationsParams{
 		ObjectType: objectType.String(),

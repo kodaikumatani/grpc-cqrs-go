@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	ulid "github.com/oklog/ulid/v2"
 )
 
 const createTuple = `-- name: CreateTuple :exec
@@ -22,7 +21,7 @@ type CreateTupleParams struct {
 	ObjectType string
 	ObjectID   string
 	Relation   string
-	UserID     ulid.ULID
+	UserID     string
 }
 
 func (q *Queries) CreateTuple(ctx context.Context, arg CreateTupleParams) error {
@@ -54,7 +53,7 @@ WHERE object_type = $1 AND object_id = $2 AND user_id = $3
 type ListRelationsParams struct {
 	ObjectType string
 	ObjectID   string
-	UserID     ulid.ULID
+	UserID     string
 }
 
 func (q *Queries) ListRelations(ctx context.Context, arg ListRelationsParams) ([]RelationTuple, error) {
