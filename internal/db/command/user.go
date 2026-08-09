@@ -2,7 +2,9 @@ package command
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/domain"
@@ -18,9 +20,16 @@ func NewUser(pool *pgxpool.Pool) command.Storage {
 }
 
 func (u *user) Create(ctx context.Context, usr *domain.User) error {
-	return u.queries.CreateUser(ctx, gen.CreateUserParams{
+	err := u.queries.CreateUser(ctx, gen.CreateUserParams{
 		ID:    usr.ID(),
 		Name:  usr.Name(),
 		Email: usr.Email(),
 	})
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return domain.ErrAlreadyExists
+	}
+
+	return err
 }

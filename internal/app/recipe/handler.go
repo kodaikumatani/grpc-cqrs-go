@@ -54,9 +54,9 @@ func (h *handler) CreateRecipe(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	userID, ok := authn.UserID(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, authn.ErrUnauthenticated.Error())
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
 	result, err := h.command.Create(ctx,
@@ -95,9 +95,9 @@ func (h *handler) UpdateRecipe(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	userID, ok := authn.UserID(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, authn.ErrUnauthenticated.Error())
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
 	if err := h.command.Update(ctx, userID, recipeID, request.Title, request.Description); err != nil {
@@ -116,9 +116,9 @@ func (h *handler) GetRecipe(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	userID, ok := authn.UserID(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, authn.ErrUnauthenticated.Error())
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
 	result, err := h.query.Get(ctx, userID, id)
@@ -163,9 +163,9 @@ func (h *handler) ChangeVisibility(
 		return nil, status.Error(codes.InvalidArgument, domain.ErrInvalidVisibility.Error())
 	}
 
-	userID, ok := authn.UserID(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, authn.ErrUnauthenticated.Error())
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
 	if err := h.command.UpdateVisibility(ctx, userID, id, visibility); err != nil {

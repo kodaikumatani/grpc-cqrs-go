@@ -15,8 +15,11 @@ type Verifier interface {
 
 type UIDKey struct{}
 
-func UserID(ctx context.Context) (ulid.ULID, bool) {
+func UserID(ctx context.Context) (ulid.ULID, error) {
 	id, ok := ctx.Value(UIDKey{}).(ulid.ULID)
+	if !ok {
+		return ulid.ULID{}, ErrUnauthenticated
+	}
 
-	return id, ok
+	return id, nil
 }
