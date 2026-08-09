@@ -3,10 +3,12 @@ package recipe
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipe"
@@ -17,6 +19,9 @@ import (
 
 var (
 	ErrUserNotFound = errors.New("user not found")
+	// ErrUnknownVisibility は domain の Visibility に対応する pb enum が
+	// 見つからない（マッピング未登録の内部不整合）ことを表す。
+	ErrUnknownVisibility = errors.New("visibility has no protobuf representation")
 )
 
 type handler struct {
@@ -110,12 +115,18 @@ func (h *handler) GetRecipe(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	visibility, ok := domainVisibilityToPb[result.Visibility]
+	if !ok {
+		return nil, status.Error(codes.Internal, ErrUnknownVisibility.Error())
+	}
+
 	return &pb.GetRecipeResponse{
 		Recipe: &pb.Recipe{
 			Id:          result.ID,
 			UserId:      result.UserID,
 			Title:       result.Title,
 			Description: result.Description,
+			Visibility:  visibility,
 			CreatedAt:   timestamppb.New(result.CreatedAt),
 			UpdatedAt:   timestamppb.New(result.UpdatedAt),
 		},
@@ -126,3 +137,44 @@ func (h *handler) GetRecipe(
 		},
 	}, nil
 }
+
+func (h *handler) ChangeVisibility(
+	ctx context.Context,
+	in *pb.ChangeVisibilityRequest,
+) (*pb.ChangeVisibilityResponse, error) {
+	id, err := uuid.Parse(in.GetId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	visibility, ok := pbToDomainVisibility[in.GetVisibility()]
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, domain.ErrInvalidVisibility.Error())
+	}
+
+	if err := h.command.UpdateVisibility(ctx, id, visibility); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.ChangeVisibilityResponse{Success: true}, nil
+}
+
+var pbToDomainVisibility = map[pb.Visibility]domain.Visibility{
+	pb.Visibility_VISIBILITY_PUBLIC:     domain.VisibilityPublic,
+	pb.Visibility_VISIBILITY_PRIVATE:    domain.VisibilityPrivate,
+	pb.Visibility_VISIBILITY_RESTRICTED: domain.VisibilityRestricted,
+}
+
+var domainVisibilityToPb = func() map[domain.Visibility]pb.Visibility {
+	out := make(map[domain.Visibility]pb.Visibility, len(pbToDomainVisibility))
+
+	for k, v := range pbToDomainVisibility {
+		if dup, ok := out[v]; ok {
+			panic(fmt.Sprintf("invert: duplicate value %v (%v, %v)", v, dup, k))
+		}
+
+		out[v] = k
+	}
+
+	return out
+}()

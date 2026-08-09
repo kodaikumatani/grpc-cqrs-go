@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrRecipeNotFound = errors.New("recipe not found")
+	ErrRecipeNotFound    = errors.New("recipe not found")
+	ErrInvalidVisibility = errors.New("invalid visibility")
 )
 
 type Recipe struct {
@@ -40,16 +41,33 @@ func (r *Recipe) Update(title, description string) {
 	r.description = description
 }
 
+func (r *Recipe) ChangeVisibility(v Visibility) {
+	r.visibility = v
+}
+
 func (r *Recipe) ID() uuid.UUID          { return r.id }
 func (r *Recipe) UserID() ulid.ULID      { return r.userID }
 func (r *Recipe) Title() string          { return r.title }
 func (r *Recipe) Description() string    { return r.description }
 func (r *Recipe) Visibility() Visibility { return r.visibility }
 
-type Visibility string
+type Visibility struct {
+	value string
+}
 
 var (
-	VisibilityPublic     Visibility = "public"
-	VisibilityPrivate    Visibility = "private"
-	VisibilityRestricted Visibility = "restricted"
+	VisibilityPublic     = Visibility{"public"}
+	VisibilityPrivate    = Visibility{"private"}
+	VisibilityRestricted = Visibility{"restricted"}
 )
+
+func NewVisibility(s string) (Visibility, error) {
+	switch s {
+	case VisibilityPublic.value, VisibilityPrivate.value, VisibilityRestricted.value:
+		return Visibility{s}, nil
+	default:
+		return Visibility{}, ErrInvalidVisibility
+	}
+}
+
+func (v Visibility) String() string { return v.value }

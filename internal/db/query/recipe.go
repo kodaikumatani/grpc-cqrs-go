@@ -24,12 +24,17 @@ func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*query.RecipeWithUser, 
 		return nil, err
 	}
 
+	visibility, err := domain.NewVisibility(string(row.Visibility))
+	if err != nil {
+		return nil, err
+	}
+
 	return &query.RecipeWithUser{
 		ID:          row.ID.String(),
 		UserID:      row.UserID.String(),
 		Title:       row.Title,
 		Description: row.Description,
-		Visibility:  domain.Visibility(row.Visibility),
+		Visibility:  visibility,
 		CreatedAt:   row.CreatedAt,
 		UpdatedAt:   row.UpdatedAt,
 		UserName:    row.UserName,

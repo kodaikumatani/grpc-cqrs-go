@@ -9,7 +9,7 @@ WHERE id = $1;
 
 -- name: UpdateRecipe :exec
 UPDATE recipes
-SET title = $2, description = $3, updated_at = now()
+SET title = $2, description = $3, visibility = $4, updated_at = now()
 WHERE id = $1;
 
 -- name: GetRecipeWithUser :one
