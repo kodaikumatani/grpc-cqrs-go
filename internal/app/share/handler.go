@@ -16,6 +16,7 @@ import (
 const (
 	msgUnauthenticated = "unauthenticated"
 	msgAlreadyShared   = "recipe already shared with this user"
+	msgInvalidRelation = "invalid relation"
 )
 
 type handler struct {
@@ -45,6 +46,11 @@ func (h *handler) ShareRecipe(
 		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
+	relation, err := authz.NewRelation(request.Relation)
+	if err != nil {
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, msgInvalidRelation)
+	}
+
 	userID, err := authn.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
@@ -54,7 +60,7 @@ func (h *handler) ShareRecipe(
 		userID.String(),
 		request.RecipeId,
 		request.TargetUserId,
-		request.Relation); err != nil {
+		relation); err != nil {
 		if errors.Is(err, authz.ErrAlreadyExists) {
 			return nil, grpcerr.WithStatus(err, codes.AlreadyExists, msgAlreadyShared)
 		}
