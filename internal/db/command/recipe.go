@@ -2,8 +2,10 @@ package command
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
@@ -30,6 +32,9 @@ func (r *recipe) Create(ctx context.Context, rec *domain.Recipe) error {
 
 func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*domain.Recipe, error) {
 	row, err := r.queries.GetRecipe(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, domain.ErrRecipeNotFound
+	}
 	if err != nil {
 		return nil, err
 	}

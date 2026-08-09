@@ -11,15 +11,16 @@ import (
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipe"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUnknownVisibility = errors.New("visibility has no protobuf representation")
+const (
+	msgUnauthenticated   = "unauthenticated"
+	msgInvalidVisibility = "invalid visibility"
+	msgRecipeNotFound    = "recipe not found"
 )
 
 type handler struct {
@@ -51,12 +52,12 @@ func (h *handler) CreateRecipe(
 	}
 
 	if err := validator.New().Struct(request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
 	userID, err := authn.UserID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
 
 	result, err := h.command.Create(ctx,
@@ -64,7 +65,7 @@ func (h *handler) CreateRecipe(
 		request.Title,
 		request.Description)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &pb.CreateRecipeResponse{
@@ -87,21 +88,21 @@ func (h *handler) UpdateRecipe(
 	}
 
 	if err := validator.New().Struct(request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
 	recipeID, err := uuid.Parse(request.ID)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
 	userID, err := authn.UserID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
 
 	if err := h.command.Update(ctx, userID, recipeID, request.Title, request.Description); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &pb.UpdateRecipeResponse{Success: true}, nil
@@ -113,22 +114,25 @@ func (h *handler) GetRecipe(
 ) (*pb.GetRecipeResponse, error) {
 	id, err := uuid.Parse(in.GetId())
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
 	userID, err := authn.UserID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
 
 	result, err := h.query.Get(ctx, userID, id)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		if errors.Is(err, domain.ErrRecipeNotFound) {
+			return nil, grpcerr.WithStatus(err, codes.NotFound, msgRecipeNotFound)
+		}
+		return nil, err
 	}
 
 	visibility, ok := domainVisibilityToPb[result.Visibility]
 	if !ok {
-		return nil, status.Error(codes.Internal, ErrUnknownVisibility.Error())
+		return nil, errors.New("visibility has no protobuf representation")
 	}
 
 	return &pb.GetRecipeResponse{
@@ -155,21 +159,21 @@ func (h *handler) ChangeVisibility(
 ) (*pb.ChangeVisibilityResponse, error) {
 	id, err := uuid.Parse(in.GetId())
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
 	visibility, ok := pbToDomainVisibility[in.GetVisibility()]
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, domain.ErrInvalidVisibility.Error())
+		return nil, grpcerr.WithStatus(domain.ErrInvalidVisibility, codes.InvalidArgument, msgInvalidVisibility)
 	}
 
 	userID, err := authn.UserID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
 
 	if err := h.command.UpdateVisibility(ctx, userID, id, visibility); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &pb.ChangeVisibilityResponse{Success: true}, nil

@@ -2,14 +2,19 @@ package interceptor
 
 import (
 	"context"
+	"errors"
 
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-const msgInternalServerError = "internal server error"
+const (
+	msgInternalServerError = "internal server error"
+	msgPermissionDenied    = "permission denied"
+)
 
 // ErrorHandlingUnaryInterceptor は handler が返したエラーを一元的に処理する。
 //   - handler が付けた status（既知エラー）: cause を warn ログに残し、安全な status を返す
@@ -31,6 +36,12 @@ func ErrorHandlingUnaryInterceptor() grpc.UnaryServerInterceptor {
 		if st, ok := status.FromError(err); ok {
 			log.Ctx(ctx).Warn().Err(err).Str("method", info.FullMethod).Msg("request failed")
 			return resp, st.Err()
+		}
+
+		// 横断的な authz エラーはここで一元変換する（各 handler で繰り返さない）。
+		if errors.Is(err, authz.ErrPermissionDenied) {
+			log.Ctx(ctx).Warn().Err(err).Str("method", info.FullMethod).Msg("permission denied")
+			return resp, status.Error(codes.PermissionDenied, msgPermissionDenied)
 		}
 
 		log.Ctx(ctx).Error().Err(err).Str("method", info.FullMethod).Msg("unhandled error")

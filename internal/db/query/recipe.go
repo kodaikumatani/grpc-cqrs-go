@@ -2,8 +2,10 @@ package query
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
@@ -20,6 +22,9 @@ func NewRecipe(pool *pgxpool.Pool) query.Storage {
 
 func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*query.RecipeWithUser, error) {
 	row, err := r.queries.GetRecipeWithUser(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, domain.ErrRecipeNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
