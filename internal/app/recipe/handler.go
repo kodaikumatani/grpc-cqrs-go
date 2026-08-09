@@ -18,9 +18,7 @@ import (
 )
 
 var (
-	ErrUserNotFound = errors.New("user not found")
-	// ErrUnknownVisibility は domain の Visibility に対応する pb enum が
-	// 見つからない（マッピング未登録の内部不整合）ことを表す。
+	ErrUserNotFound      = errors.New("user not found")
 	ErrUnknownVisibility = errors.New("visibility has no protobuf representation")
 )
 
@@ -56,9 +54,9 @@ func (h *handler) CreateRecipe(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	userID, ok := ctx.Value(authn.UIDKey{}).(string)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, ErrUserNotFound.Error())
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 
 	result, err := h.command.Create(ctx,
@@ -79,7 +77,7 @@ func (h *handler) UpdateRecipe(
 	in *pb.UpdateRecipeRequest,
 ) (*pb.UpdateRecipeResponse, error) {
 	request := struct {
-		ID          string `validate:"required,uuid"`
+		ID          string `validate:"required"`
 		Title       string `validate:"required"`
 		Description string `validate:"required"`
 	}{
@@ -92,9 +90,17 @@ func (h *handler) UpdateRecipe(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	recipeID := uuid.MustParse(request.ID)
+	recipeID, err := uuid.Parse(request.ID)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
-	if err := h.command.Update(ctx, recipeID, request.Title, request.Description); err != nil {
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if err := h.command.Update(ctx, userID, recipeID, request.Title, request.Description); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -110,7 +116,12 @@ func (h *handler) GetRecipe(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	result, err := h.query.Get(ctx, id)
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	result, err := h.query.Get(ctx, userID, id)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -152,7 +163,12 @@ func (h *handler) ChangeVisibility(
 		return nil, status.Error(codes.InvalidArgument, domain.ErrInvalidVisibility.Error())
 	}
 
-	if err := h.command.UpdateVisibility(ctx, id, visibility); err != nil {
+	userID, err := authn.UserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if err := h.command.UpdateVisibility(ctx, userID, id, visibility); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 

@@ -2,9 +2,6 @@ package authz
 
 import (
 	"context"
-
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
-	"github.com/oklog/ulid/v2"
 )
 
 type Checker struct {
@@ -15,38 +12,29 @@ func NewChecker(storage Storage) Checker {
 	return Checker{storage: storage}
 }
 
-func (c Checker) CanViewRecipe(ctx context.Context, recipeID string) error {
-	return c.hasPermission(ctx, ObjectRecipe, recipeID, PermView)
+func (c Checker) CanViewRecipe(ctx context.Context, userID, recipeID string) error {
+	return c.hasPermission(ctx, userID, ObjectRecipe, recipeID, PermView)
 }
 
-func (c Checker) CanEditRecipe(ctx context.Context, recipeID string) error {
-	return c.hasPermission(ctx, ObjectRecipe, recipeID, PermEdit)
+func (c Checker) CanEditRecipe(ctx context.Context, userID, recipeID string) error {
+	return c.hasPermission(ctx, userID, ObjectRecipe, recipeID, PermEdit)
 }
 
-func (c Checker) CanShareRecipe(ctx context.Context, recipeID string) error {
-	return c.hasPermission(ctx, ObjectRecipe, recipeID, PermShare)
+func (c Checker) CanShareRecipe(ctx context.Context, userID, recipeID string) error {
+	return c.hasPermission(ctx, userID, ObjectRecipe, recipeID, PermShare)
 }
 
-func (c Checker) IsRecipeOwner(ctx context.Context, recipeID string) error {
-	return c.hasRelation(ctx, ObjectRecipe, recipeID, RelOwner)
+func (c Checker) IsRecipeOwner(ctx context.Context, userID, recipeID string) error {
+	return c.hasRelation(ctx, userID, ObjectRecipe, recipeID, RelOwner)
 }
 
 func (c Checker) hasPermission(
 	ctx context.Context,
+	userID string,
 	objectType ObjectType,
 	objectID string,
 	perm Permission,
 ) error {
-	uid, ok := ctx.Value(authn.UIDKey{}).(string)
-	if !ok {
-		return authn.ErrUnauthenticated
-	}
-
-	userID, err := ulid.Parse(uid)
-	if err != nil {
-		return authn.ErrUnauthenticated
-	}
-
 	tuples, err := c.storage.ListRelations(
 		ctx,
 		objectType,
@@ -59,7 +47,7 @@ func (c Checker) hasPermission(
 
 	for _, relation := range permissionRelations[objectType][perm] {
 		for _, tuple := range tuples {
-			if relation == tuple.Relation {
+			if relation == tuple.Relation() {
 				return nil
 			}
 		}
@@ -70,20 +58,11 @@ func (c Checker) hasPermission(
 
 func (c Checker) hasRelation(
 	ctx context.Context,
+	userID string,
 	objectType ObjectType,
 	objectID string,
 	relation Relation,
 ) error {
-	uid, ok := ctx.Value(authn.UIDKey{}).(string)
-	if !ok {
-		return authn.ErrUnauthenticated
-	}
-
-	userID, err := ulid.Parse(uid)
-	if err != nil {
-		return authn.ErrUnauthenticated
-	}
-
 	tuples, err := c.storage.ListRelations(
 		ctx,
 		objectType,
@@ -95,7 +74,7 @@ func (c Checker) hasRelation(
 	}
 
 	for _, tuple := range tuples {
-		if relation == tuple.Relation {
+		if relation == tuple.Relation() {
 			return nil
 		}
 	}

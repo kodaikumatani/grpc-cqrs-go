@@ -17,10 +17,11 @@ func NewCommand(storage Storage) *Command {
 
 func (c *Command) Create(
 	ctx context.Context,
+	id ulid.ULID,
 	name,
 	email string,
 ) (*domain.User, error) {
-	user := domain.NewUser(ulid.Make(), name, email)
+	user := domain.NewUser(id, name, email)
 
 	if err := c.storage.Create(ctx, user); err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ import (
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/oklog/ulid/v2"
 )
 
 type verifier struct {
@@ -33,7 +34,10 @@ func (c *verifier) VerifyIDToken(ctx context.Context, idToken string) (context.C
 		return nil, err
 	}
 
-	ctx = context.WithValue(ctx, authn.UIDKey{}, token.UID)
-	ctx = context.WithValue(ctx, authn.ClaimsKey{}, token.Claims)
-	return ctx, nil
+	uid, err := ulid.Parse(token.UID)
+	if err != nil {
+		return nil, err
+	}
+
+	return context.WithValue(ctx, authn.UIDKey{}, uid), nil
 }

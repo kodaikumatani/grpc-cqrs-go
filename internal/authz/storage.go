@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 )
 
 type Storage interface {
@@ -14,6 +13,6 @@ type Storage interface {
 		ctx context.Context,
 		objectType ObjectType,
 		objectID string,
-		userID ulid.ULID,
+		userID string,
 	) ([]*Tuple, error)
 }

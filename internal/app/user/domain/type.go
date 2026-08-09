@@ -1,8 +1,12 @@
 package domain
 
 import (
+	"errors"
+
 	"github.com/oklog/ulid/v2"
 )
+
+var ErrAlreadyExists = errors.New("user already exits")
 
 type User struct {
 	id    ulid.ULID

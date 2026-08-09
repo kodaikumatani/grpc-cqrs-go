@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
-	"github.com/oklog/ulid/v2"
 )
 
 type tuple struct {
@@ -24,10 +23,10 @@ func (t *tuple) CreateTuple(
 ) error {
 	return t.queries.CreateTuple(ctx, gen.CreateTupleParams{
 		ID:         uuid.New(),
-		ObjectType: tuple.ObjectType.String(),
-		ObjectID:   tuple.ObjectID,
-		Relation:   tuple.Relation.String(),
-		UserID:     tuple.UserID,
+		ObjectType: tuple.ObjectType().String(),
+		ObjectID:   tuple.ObjectID(),
+		Relation:   tuple.Relation().String(),
+		UserID:     tuple.UserID(),
 	})
 }
 
@@ -42,7 +41,7 @@ func (t *tuple) ListRelations(
 	ctx context.Context,
 	objectType authz.ObjectType,
 	objectID string,
-	userID ulid.ULID,
+	userID string,
 ) ([]*authz.Tuple, error) {
 	rows, err := t.queries.ListRelations(ctx, gen.ListRelationsParams{
 		ObjectType: objectType.String(),
@@ -65,13 +64,13 @@ func (t *tuple) ListRelations(
 			return nil, err
 		}
 
-		tuples[i] = &authz.Tuple{
-			ID:         row.ID,
-			ObjectType: objectType,
-			ObjectID:   row.ObjectID,
-			Relation:   relation,
-			UserID:     row.UserID,
-		}
+		tuples[i] = authz.NewTuple(
+			row.ID,
+			objectType,
+			row.ObjectID,
+			relation,
+			row.UserID,
+		)
 	}
 
 	return tuples, nil

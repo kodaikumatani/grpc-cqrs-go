@@ -71,7 +71,7 @@ type RelationTuple struct {
 	ObjectType string
 	ObjectID   string
 	Relation   string
-	UserID     ulid.ULID
+	UserID     string
 	CreatedAt  time.Time
 }
 

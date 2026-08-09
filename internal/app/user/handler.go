@@ -2,12 +2,20 @@ package user
 
 import (
 	"context"
+	"errors"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/domain"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/user"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+)
+
+const (
+	msgUnauthenticated   = "unauthenticated"
+	msgUserAlreadyExists = "user already exists"
 )
 
 type handler struct {
@@ -32,12 +40,20 @@ func (h *handler) CreateUser(
 	}
 
 	if err := validator.New().Struct(request); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
-	result, err := h.command.Create(ctx, request.Name, request.Email)
+	id, err := authn.UserID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
+	}
+
+	result, err := h.command.Create(ctx, id, request.Name, request.Email)
+	if err != nil {
+		if errors.Is(err, domain.ErrAlreadyExists) {
+			return nil, grpcerr.WithStatus(err, codes.AlreadyExists, msgUserAlreadyExists)
+		}
+		return nil, err
 	}
 
 	return &pb.CreateUserResponse{
