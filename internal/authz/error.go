@@ -6,4 +6,5 @@ var (
 	ErrUnknownObjectType = errors.New("unknown object type")
 	ErrUnknownRelation   = errors.New("unknown relation")
 	ErrPermissionDenied  = errors.New("permission denied")
+	ErrAlreadyExists     = errors.New("relation already exists")
 )

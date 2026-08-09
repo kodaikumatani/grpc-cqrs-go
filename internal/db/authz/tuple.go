@@ -2,8 +2,10 @@ package authz
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
@@ -21,13 +23,20 @@ func (t *tuple) CreateTuple(
 	ctx context.Context,
 	tuple *authz.Tuple,
 ) error {
-	return t.queries.CreateTuple(ctx, gen.CreateTupleParams{
-		ID:         uuid.New(),
+	err := t.queries.CreateTuple(ctx, gen.CreateTupleParams{
+		ID:         tuple.ID(),
 		ObjectType: tuple.ObjectType().String(),
 		ObjectID:   tuple.ObjectID(),
 		Relation:   tuple.Relation().String(),
 		UserID:     tuple.UserID(),
 	})
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return authz.ErrAlreadyExists
+	}
+
+	return err
 }
 
 func (t *tuple) DeleteTuple(
