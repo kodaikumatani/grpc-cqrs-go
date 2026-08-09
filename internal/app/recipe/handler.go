@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/domain"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipe"
@@ -18,6 +19,34 @@ import (
 var (
 	ErrUserNotFound = errors.New("user not found")
 )
+
+// toDomainVisibility は pb の enum を domain の Visibility に変換する。
+// UNSPECIFIED / 未知の値は ErrInvalidVisibility を返す。
+func toDomainVisibility(v pb.Visibility) (domain.Visibility, error) {
+	switch v {
+	case pb.Visibility_VISIBILITY_PUBLIC:
+		return domain.VisibilityPublic, nil
+	case pb.Visibility_VISIBILITY_PRIVATE:
+		return domain.VisibilityPrivate, nil
+	case pb.Visibility_VISIBILITY_RESTRICTED:
+		return domain.VisibilityRestricted, nil
+	default:
+		return domain.Visibility{}, domain.ErrInvalidVisibility
+	}
+}
+
+func toPBVisibility(v domain.Visibility) pb.Visibility {
+	switch v {
+	case domain.VisibilityPublic:
+		return pb.Visibility_VISIBILITY_PUBLIC
+	case domain.VisibilityPrivate:
+		return pb.Visibility_VISIBILITY_PRIVATE
+	case domain.VisibilityRestricted:
+		return pb.Visibility_VISIBILITY_RESTRICTED
+	default:
+		return pb.Visibility_VISIBILITY_UNSPECIFIED
+	}
+}
 
 type handler struct {
 	pb.UnimplementedRecipeServiceServer
@@ -116,6 +145,7 @@ func (h *handler) GetRecipe(
 			UserId:      result.UserID,
 			Title:       result.Title,
 			Description: result.Description,
+			Visibility:  toPBVisibility(result.Visibility),
 			CreatedAt:   timestamppb.New(result.CreatedAt),
 			UpdatedAt:   timestamppb.New(result.UpdatedAt),
 		},
@@ -125,4 +155,25 @@ func (h *handler) GetRecipe(
 			Email: result.UserEmail,
 		},
 	}, nil
+}
+
+func (h *handler) ChangeVisibility(
+	ctx context.Context,
+	in *pb.ChangeVisibilityRequest,
+) (*pb.ChangeVisibilityResponse, error) {
+	id, err := uuid.Parse(in.GetId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	visibility, err := toDomainVisibility(in.GetVisibility())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if err := h.command.UpdateVisibility(ctx, id, visibility); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.ChangeVisibilityResponse{Success: true}, nil
 }

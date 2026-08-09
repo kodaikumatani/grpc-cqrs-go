@@ -89,3 +89,22 @@ func (u *Command) Update(
 
 	return nil
 }
+
+func (u *Command) UpdateVisibility(
+	ctx context.Context,
+	id uuid.UUID,
+	visibility domain.Visibility,
+) error {
+	if err := u.checker.IsRecipeOwner(ctx, id.String()); err != nil {
+		return err
+	}
+
+	recipe, err := u.storage.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	recipe.ChangeVisibility(visibility)
+
+	return u.storage.Update(ctx, recipe)
+}

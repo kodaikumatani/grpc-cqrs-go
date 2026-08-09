@@ -24,7 +24,7 @@ func (r *recipe) Create(ctx context.Context, rec *domain.Recipe) error {
 		UserID:      rec.UserID(),
 		Title:       rec.Title(),
 		Description: rec.Description(),
-		Visibility:  gen.Visibility(rec.Visibility()),
+		Visibility:  gen.Visibility(rec.Visibility().String()),
 	})
 }
 
@@ -34,12 +34,17 @@ func (r *recipe) Get(ctx context.Context, id uuid.UUID) (*domain.Recipe, error) 
 		return nil, err
 	}
 
+	visibility, err := domain.NewVisibility(string(row.Visibility))
+	if err != nil {
+		return nil, err
+	}
+
 	return domain.NewRecipe(
 		row.ID,
 		row.UserID,
 		row.Title,
 		row.Description,
-		domain.Visibility(row.Visibility),
+		visibility,
 	), nil
 }
 
@@ -48,5 +53,6 @@ func (r *recipe) Update(ctx context.Context, rec *domain.Recipe) error {
 		ID:          rec.ID(),
 		Title:       rec.Title(),
 		Description: rec.Description(),
+		Visibility:  gen.Visibility(rec.Visibility().String()),
 	})
 }
