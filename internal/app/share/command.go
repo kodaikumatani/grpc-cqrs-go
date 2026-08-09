@@ -26,15 +26,10 @@ func (u *Command) ShareRecipe(
 	ctx context.Context,
 	userID,
 	recipeID,
-	targetUserID,
-	relation string,
+	targetUserID string,
+	relation authz.Relation,
 ) error {
 	if err := u.checker.CanShareRecipe(ctx, userID, recipeID); err != nil {
-		return err
-	}
-
-	rel, err := authz.NewRelation(relation)
-	if err != nil {
 		return err
 	}
 
@@ -42,7 +37,7 @@ func (u *Command) ShareRecipe(
 		uuid.New(),
 		authz.ObjectRecipe,
 		recipeID,
-		rel,
+		relation,
 		targetUserID,
 	)
 

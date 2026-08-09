@@ -2,19 +2,21 @@ package share
 
 import (
 	"context"
+	"errors"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/share"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
-	msgUnauthenticated   = "unauthenticated"
-	msgUserAlreadyExists = "user already exists"
+	msgUnauthenticated = "unauthenticated"
+	msgAlreadyShared   = "recipe already shared with this user"
+	msgInvalidRelation = "invalid relation"
 )
 
 type handler struct {
@@ -44,6 +46,11 @@ func (h *handler) ShareRecipe(
 		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
+	relation, err := authz.NewRelation(request.Relation)
+	if err != nil {
+		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, msgInvalidRelation)
+	}
+
 	userID, err := authn.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
@@ -53,8 +60,11 @@ func (h *handler) ShareRecipe(
 		userID.String(),
 		request.RecipeId,
 		request.TargetUserId,
-		request.Relation); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		relation); err != nil {
+		if errors.Is(err, authz.ErrAlreadyExists) {
+			return nil, grpcerr.WithStatus(err, codes.AlreadyExists, msgAlreadyShared)
+		}
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
