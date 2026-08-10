@@ -10,7 +10,7 @@ import (
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/command"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/query"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/recipe"
 	"google.golang.org/grpc/codes"
@@ -55,7 +55,7 @@ func (h *handler) CreateRecipe(
 		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
-	userID, err := authn.UserID(ctx)
+	userID, err := identity.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
@@ -96,7 +96,7 @@ func (h *handler) UpdateRecipe(
 		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
-	userID, err := authn.UserID(ctx)
+	userID, err := identity.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
@@ -117,7 +117,7 @@ func (h *handler) GetRecipe(
 		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
-	userID, err := authn.UserID(ctx)
+	userID, err := identity.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
@@ -167,7 +167,7 @@ func (h *handler) ChangeVisibility(
 		return nil, grpcerr.WithStatus(entity.ErrInvalidVisibility, codes.InvalidArgument, msgInvalidVisibility)
 	}
 
-	userID, err := authn.UserID(ctx)
+	userID, err := identity.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}

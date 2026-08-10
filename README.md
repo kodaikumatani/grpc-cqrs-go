@@ -12,7 +12,7 @@ Feature-first + CQRS アーキテクチャで構築した gRPC サーバーで�
 - **sqlc** - SQL からの型安全なコード生成
 - **Atlas** - データベースマイグレーション
 - **Buf** - Protobuf コード生成
-- **Firebase Authentication** - 認証
+- **ESPv2 (ESP) + Firebase Authentication** - 認証（前段のゲートウェイで検証しヘッダ伝播）
 - **zerolog** - 構造化ログ
 
 ## アーキテクチャ
@@ -51,9 +51,9 @@ Feature-first + CQRS パターンを採用し、ドメイン（フィーチャ�
 │   │   │   └── wire.go
 │   │   ├── registrar.go            #   サービス登録
 │   │   └── wire.go
-│   ├── authn/                      # 認証 (Firebase Authentication)
-│   │   ├── type.go                 #   Verifier / UserID(ctx)
-│   │   └── firebase/               #   Firebase 実装
+│   ├── identity/                   # 現在ユーザーの identity（ctx 伝播・grpc 非依存）
+│   │   ├── type.go                 #   UIDKey / UserID(ctx) / ErrUnauthenticated
+│   │   └── gateway/                #   ゲートウェイヘッダの解釈 (Parse, HeaderUserInfo)
 │   ├── authz/                      # 認可 (ReBAC)
 │   │   ├── check.go                #   Checker (Can*/Is*)
 │   │   ├── model.go                #   Tuple, ObjectType, Relation, Permission
@@ -69,12 +69,13 @@ Feature-first + CQRS パターンを採用し、ドメイン（フィーチャ�
 │   │   └── wire.go
 │   ├── grpcerr/                    # gRPC エラー変換 (WithStatus: cause 保持 + 安全な status)
 │   ├── interceptor/                # gRPC インターセプター
-│   │   ├── auth.go                 #   認証（Bearer トークン検証）
+│   │   ├── auth.go                 #   認証（ヘッダ→UID, GatewayAuthUnaryInterceptor + 公開メソッド除外）
 │   │   ├── error.go                #   エラー処理（内部エラー秘匿 + cause ログ）
 │   │   ├── logging.go              #   リクエストログ
 │   │   └── recovery.go             #   パニックリカバリー
 │   └── logger/
 │       └── zerolog.go
+├── espv2/                          # ESPv2 (API ゲートウェイ) 導入 scaffold (config/compose/README)
 ├── pkg/pb/                         # Protobuf 生成コード (recipe/share/user)
 ├── proto/                          # Protobuf 定義 (recipe/share/user)
 ├── atlas.hcl                       # Atlas 設定
@@ -99,11 +100,20 @@ handler.go          ← gRPC リクエストの受付・バリデーション・
 - DB 層はエンティティ単位（`db/recipe`, `db/user`, `db/tuple`）で実装。CQRS の read/write の差は app 側の interface が表現する
 - エンティティは非公開フィールド + コンストラクタ + getter でカプセル化（不正な生成を型で防止）
 
-### 認証 (authn)
+### 認証 / identity
 
-- Firebase Authentication の ID トークンを `AuthUnaryInterceptor` で検証
-- 認証境界で `token.UID` を `ulid.ULID` に parse し ctx へ格納。以降 `authn.UserID(ctx)` で取得（parse は1回、下層へは typed で渡す）
+app 内でトークン検証はしない。**前段(ゲートウェイ)が検証済みの ID をヘッダで渡す前提**で、
+app はそれを信頼して現在ユーザーの identity を確定・伝播するだけ（`internal/identity`）。
+
+- **本番**: ESP(ESPv2/Envoy) が Firebase の ID トークンを検証し、`X-Endpoint-API-UserInfo`
+  ヘッダを付与 → `GatewayAuthUnaryInterceptor` が UID を取り出し ctx へ
+- **ローカル**: ESP 無し。開発者がヘッダを直接埋め込む（検証なし・impersonate 用。`espv2/README.md` 参照）
+- 以降 `identity.UserID(ctx)` で `ulid.ULID` を取得（ctx を読むのは handler だけ、下層へは typed で渡す）
 - **前提**: Firebase の uid がアプリの user id（ULID）であること。`CreateUser` は認証済み UID を user.id として登録する
+- reflection / health は認証不要（`GatewayAuthUnaryInterceptor` が除外。health は本番の probe 用）
+
+> ⚠️ app はヘッダを信頼するため、**ゲートウェイ経由でのみ到達可能**にすること
+> （直接到達できるとヘッダ偽造で認証を素通りできる）。
 
 ### 認可 (ReBAC)
 
@@ -159,7 +169,16 @@ go run ./cmd/serve
 
 ## gRPC API
 
-認証が必要なエンドポイントは Firebase の ID トークンを `authorization: Bearer <token>` で渡します。
+認証は前段のゲートウェイが検証済み ID を `x-endpoint-api-userinfo` ヘッダで渡す前提（[認証 / identity](#認証--identity) 参照）。
+
+- **本番**（ESP 前段）: クライアントは `authorization: Bearer <firebase_id_token>` を送る（ESP が検証しヘッダ付与）
+- **ローカル**（ESP 無し）: `x-endpoint-api-userinfo` を手で埋め込む。以下の例はこの形。
+
+```bash
+# 対象ユーザーの ULID を base64url(JSON) にしてヘッダ値に（app は padding 有無どちらも可）
+UID=01J...
+INFO=$(printf '{"sub":"%s"}' "$UID" | basenc --base64url | tr -d '=')
+```
 
 ### UserService
 
@@ -168,7 +187,7 @@ go run ./cmd/serve
 認証済みの Firebase ユーザーを app 側の users に登録します（user id = Firebase uid）。
 
 ```bash
-grpcurl -plaintext -H "authorization: Bearer <firebase_id_token>" -d '{
+grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
   "name": "Kodai",
   "email": "kodai@example.com"
 }' localhost:50051 user.UserService/CreateUser
@@ -181,7 +200,7 @@ grpcurl -plaintext -H "authorization: Bearer <firebase_id_token>" -d '{
 作成者が owner として登録されます（`private` 初期）。
 
 ```bash
-grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
+grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
   "title": "カレーライス",
   "description": "スパイスから作る本格カレー"
 }' localhost:50051 recipe.RecipeService/CreateRecipe
@@ -190,7 +209,7 @@ grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
 #### UpdateRecipe（要認証・editor 以上）
 
 ```bash
-grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
+grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
   "id": "<recipe_id>",
   "title": "カレーライス 改",
   "description": "改良版"
@@ -200,7 +219,7 @@ grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
 #### ChangeVisibility（要認証・owner のみ）
 
 ```bash
-grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
+grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
   "id": "<recipe_id>",
   "visibility": "VISIBILITY_PUBLIC"
 }' localhost:50051 recipe.RecipeService/ChangeVisibility
@@ -211,7 +230,7 @@ grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
 visibility に応じて認可されます（public は誰でも / private は owner / restricted は共有相手）。
 
 ```bash
-grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
+grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
   "id": "<recipe_id>"
 }' localhost:50051 recipe.RecipeService/GetRecipe
 ```
@@ -239,7 +258,7 @@ grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
 対象ユーザーに `viewer` / `editor` を付与します。重複付与は `AlreadyExists` になります。
 
 ```bash
-grpcurl -plaintext -H "authorization: Bearer <token>" -d '{
+grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
   "recipe_id": "<recipe_id>",
   "target_user_id": "<user_id>",
   "relation": "viewer"

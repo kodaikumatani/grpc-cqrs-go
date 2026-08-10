@@ -2,39 +2,68 @@ package interceptor
 
 import (
 	"context"
-	"errors"
+	"strings"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity/gateway"
+	"github.com/oklog/ulid/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/metadata"
 )
 
-var (
-	ErrInvalidAuthToken = errors.New("invalid authorization token")
-)
+const msgUnauthenticated = "unauthenticated"
 
-func AuthUnaryInterceptor(verifier authn.Verifier) grpc.UnaryServerInterceptor {
+// publicMethodPrefixes は認証不要のインフラ系メソッド。
+// reflection は grpcurl 等の探索用、health は本番でも probe が無認証で叩ける必要がある。
+var publicMethodPrefixes = []string{
+	"/grpc.reflection.",
+	"/grpc.health.",
+}
+
+// GatewayAuthUnaryInterceptor は前段(ESP 等)が付与した検証済みユーザー情報ヘッダから
+// UID を取り出し ctx(identity.UIDKey)に格納する。トークン検証は前段が済ませている前提
+// （app 内では検証しない）。cause は保持し、client には安全な Unauthenticated を返す。
+func GatewayAuthUnaryInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req any,
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (any, error) {
-		tokenString, err := auth.AuthFromMD(ctx, "bearer")
-		if err != nil {
-			return nil, status.Error(codes.Unauthenticated, ErrInvalidAuthToken.Error())
-		}
-		if tokenString == "" {
-			return nil, status.Error(codes.Unauthenticated, ErrInvalidAuthToken.Error())
+		if isPublicMethod(info.FullMethod) {
+			return handler(ctx, req)
 		}
 
-		ctx, err = verifier.VerifyIDToken(ctx, tokenString)
+		uid, err := userIDFromMetadata(ctx)
 		if err != nil {
-			return nil, status.Error(codes.Unauthenticated, ErrInvalidAuthToken.Error())
+			return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 		}
 
-		return handler(ctx, req)
+		return handler(context.WithValue(ctx, identity.UIDKey{}, uid), req)
 	}
+}
+
+func isPublicMethod(fullMethod string) bool {
+	for _, prefix := range publicMethodPrefixes {
+		if strings.HasPrefix(fullMethod, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func userIDFromMetadata(ctx context.Context) (ulid.ULID, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ulid.ULID{}, identity.ErrUnauthenticated
+	}
+
+	vals := md.Get(gateway.HeaderUserInfo)
+	if len(vals) == 0 {
+		return ulid.ULID{}, identity.ErrUnauthenticated
+	}
+
+	return gateway.Parse(vals[0])
 }

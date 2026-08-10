@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/share"
@@ -51,7 +51,7 @@ func (h *handler) ShareRecipe(
 		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, msgInvalidRelation)
 	}
 
-	userID, err := authn.UserID(ctx)
+	userID, err := identity.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}

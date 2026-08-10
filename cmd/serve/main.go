@@ -38,6 +38,7 @@ func run(ctx context.Context) error {
 			interceptor.LoggingUnaryInterceptor(),
 			interceptor.RecoveryUnaryInterceptor(),
 			interceptor.ErrorHandlingUnaryInterceptor(),
+			interceptor.GatewayAuthUnaryInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
 			interceptor.LoggingStreamInterceptor(),

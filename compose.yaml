@@ -16,19 +16,6 @@ services:
     ports:
       - "127.0.0.1:25432:5432"
       - "[::1]:25432:5432"
-  firebase:
-    build:
-      context: ./firebase
-    environment:
-      - PROJECT=my-project
-    volumes:
-      - ./firebase/firebase.json:/opt/firebase/firebase.json
-    ports:
-      - 4000:4000
-      - 9099:9099
-    working_dir: /opt/firebase
-    command: sh -c 'firebase emulators:start --project $$PROJECT'
-    tty: true
 
 volumes:
   postgres_data:

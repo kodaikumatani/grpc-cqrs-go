@@ -1,0 +1,34 @@
+# ESPv2 を sidecar/ゲートウェイとして前段に置く compose 断片（scaffold）。
+#   docker compose -f compose.yaml -f espv2/compose.espv2.yaml up
+#
+# ⚠️ 実際に起動するには:
+#   1) Cloud Endpoints に service config をデプロイ（espv2/README 参照）
+#   2) ESP_ARGS の --service を <PROJECT_ID> に合わせる（managed mode は GCP 認証が必要）
+#   3) app をコンテナ化して同ネットワークに置く（下記 app サービス）。
+#      app は外部にポート公開せず、ESPv2 からのみ到達させる（loopback/内部のみ）。
+services:
+  espv2:
+    image: gcr.io/endpoints-release/endpoints-runtime:2
+    depends_on:
+      - app
+    environment:
+      ESP_ARGS: >-
+        --listener_port=8080
+        --backend=grpc://app:50051
+        --service=grpc-cqrs-go.endpoints.<PROJECT_ID>.cloud.goog
+        --rollout_strategy=managed
+        --healthz=/healthz
+    ports:
+      # 外部公開は ESPv2 のみ
+      - "127.0.0.1:8080:8080"
+
+  app:
+    build:
+      context: ..
+    # ★ ポートを公開しない = ESPv2 経由でのみ到達可能にする（ヘッダ偽造を防ぐ）
+    expose:
+      - "50051"
+    environment:
+      - DATABASE_URL=postgres://gcook:p4ssw0rd!@postgres:5432/gcook?sslmode=disable
+    depends_on:
+      - postgres
