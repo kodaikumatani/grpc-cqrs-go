@@ -51,6 +51,14 @@ func run(ctx context.Context) error {
 	s = services.Register(s)
 	reflection.Register(s)
 
+	// grpc.health.v1.Health を登録し、DB 疎通をステータスに反映させる。
+	// これが無いと「プロセスは生きているが応答できない」状態を外から判定できず、
+	// k8s の Pod が Ready のままトラフィックを受け続けてしまう。
+	services.Health.Register(s)
+	healthCtx, stopHealth := context.WithCancel(ctx)
+	defer stopHealth()
+	go services.Health.Start(healthCtx)
+
 	log.Ctx(ctx).Info().Msgf("server listening at %v", lis.Addr())
 
 	if err := s.Serve(lis); err != nil {
