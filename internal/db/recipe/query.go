@@ -37,7 +37,7 @@ func (s *queryStore) Get(ctx context.Context, id uuid.UUID) (*query.RecipeWithUs
 
 	return &query.RecipeWithUser{
 		ID:          row.ID.String(),
-		UserID:      row.UserID.String(),
+		UserID:      row.UserID,
 		Title:       row.Title,
 		Description: row.Description,
 		Visibility:  visibility,

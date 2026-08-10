@@ -3,8 +3,6 @@ package gateway
 import (
 	"encoding/base64"
 	"testing"
-
-	"github.com/oklog/ulid/v2"
 )
 
 func encode(t *testing.T, jsonBody string) string {
@@ -13,22 +11,25 @@ func encode(t *testing.T, jsonBody string) string {
 }
 
 func TestParseUserID(t *testing.T) {
-	uid := ulid.Make().String()
-
 	tests := []struct {
 		name    string
 		encoded string
-		wantID  string
+		want    string
 		wantErr bool
 	}{
 		{
-			name:    "sub から取得",
-			encoded: encode(t, `{"sub":"`+uid+`","email":"a@example.com"}`),
-			wantID:  uid,
+			name:    "sub から取得(Google の数値 sub)",
+			encoded: encode(t, `{"sub":"117012345678901234567","email":"a@example.com"}`),
+			want:    "117012345678901234567",
 		},
 		{
-			name:    "非 ULID は失敗",
-			encoded: encode(t, `{"sub":"not-a-ulid"}`),
+			name:    "sub は不透明文字列でよい(ULID でなくても可)",
+			encoded: encode(t, `{"sub":"auth0|abc123"}`),
+			want:    "auth0|abc123",
+		},
+		{
+			name:    "sub 空は失敗",
+			encoded: encode(t, `{"email":"a@example.com"}`),
 			wantErr: true,
 		},
 		{
@@ -50,8 +51,8 @@ func TestParseUserID(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if got.String() != tt.wantID {
-				t.Fatalf("want %s, got %s", tt.wantID, got.String())
+			if got != tt.want {
+				t.Fatalf("want %s, got %s", tt.want, got)
 			}
 		})
 	}

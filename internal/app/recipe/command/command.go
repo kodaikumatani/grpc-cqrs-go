@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
-	"github.com/oklog/ulid/v2"
 	"github.com/samber/lo"
 )
 
@@ -30,7 +29,7 @@ func NewCommand(
 
 func (u *Command) Create(
 	ctx context.Context,
-	userID ulid.ULID,
+	userID string,
 	title,
 	description string,
 ) (*entity.Recipe, error) {
@@ -47,7 +46,7 @@ func (u *Command) Create(
 		authz.ObjectRecipe,
 		recipe.ID().String(),
 		authz.RelOwner,
-		userID.String(),
+		userID,
 	)
 
 	if err := u.storage.Create(ctx, recipe); err != nil {
@@ -63,12 +62,12 @@ func (u *Command) Create(
 
 func (u *Command) Update(
 	ctx context.Context,
-	userID ulid.ULID,
+	userID string,
 	id uuid.UUID,
 	title, description string,
 ) error {
 	if err := u.checker.
-		CanEditRecipe(ctx, userID.String(), id.String()); err != nil {
+		CanEditRecipe(ctx, userID, id.String()); err != nil {
 		return err
 	}
 
@@ -88,11 +87,11 @@ func (u *Command) Update(
 
 func (u *Command) UpdateVisibility(
 	ctx context.Context,
-	userID ulid.ULID,
+	userID string,
 	id uuid.UUID,
 	visibility entity.Visibility,
 ) error {
-	if err := u.checker.IsRecipeOwner(ctx, userID.String(), id.String()); err != nil {
+	if err := u.checker.IsRecipeOwner(ctx, userID, id.String()); err != nil {
 		return err
 	}
 

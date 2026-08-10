@@ -7,8 +7,6 @@ package gen
 
 import (
 	"context"
-
-	ulid "github.com/oklog/ulid/v2"
 )
 
 const createUser = `-- name: CreateUser :exec
@@ -17,7 +15,7 @@ VALUES ($1, $2, $3)
 `
 
 type CreateUserParams struct {
-	ID    ulid.ULID
+	ID    string
 	Name  string
 	Email string
 }

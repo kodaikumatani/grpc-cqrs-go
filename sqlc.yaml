@@ -15,13 +15,3 @@ sql:
             go_type: "time.Time"
           - db_type: "pg_catalog.timestamp"
             go_type: "time.Time"
-          - column: "recipes.user_id"
-            go_type:
-              import: "github.com/oklog/ulid/v2"
-              package: "ulid"
-              type: "ULID"
-          - column: "users.id"
-            go_type:
-              import: "github.com/oklog/ulid/v2"
-              package: "ulid"
-              type: "ULID"

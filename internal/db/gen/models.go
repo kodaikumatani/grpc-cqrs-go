@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	ulid "github.com/oklog/ulid/v2"
 )
 
 type Visibility string
@@ -58,7 +57,7 @@ func (ns NullVisibility) Value() (driver.Value, error) {
 
 type Recipe struct {
 	ID          uuid.UUID
-	UserID      ulid.ULID
+	UserID      string
 	Title       string
 	Description string
 	CreatedAt   time.Time
@@ -76,7 +75,7 @@ type RelationTuple struct {
 }
 
 type User struct {
-	ID        ulid.ULID
+	ID        string
 	Name      string
 	Email     string
 	CreatedAt time.Time

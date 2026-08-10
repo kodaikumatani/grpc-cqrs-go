@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/gen"
-	"github.com/oklog/ulid/v2"
 )
 
 // fakeDBTX は Exec が返すエラーを差し替えられる gen.DBTX のスタブ。
@@ -85,7 +84,7 @@ func TestUserCreate_ErrorTranslation(t *testing.T) {
 
 			got := repo.Create(
 				context.Background(),
-				entity.NewUser(ulid.Make(), "name", "a@example.com"),
+				entity.NewUser("117012345678901234567", "name", "a@example.com"),
 			)
 
 			tt.check(t, got)
