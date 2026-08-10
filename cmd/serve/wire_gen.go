@@ -22,6 +22,7 @@ import (
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/recipe"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/tuple"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/db/user"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/health"
 )
 
 // Injectors from wire.go:
@@ -44,8 +45,10 @@ func initializeServices(ctx context.Context, dsn string) (*services, func(), err
 	shareCommand := share.NewCommand(authzStorage, checker)
 	shareServiceServer := share.NewHandler(shareCommand)
 	registrar := app.NewRegistrar(recipeServiceServer, userServiceServer, shareServiceServer)
+	healthChecker := health.NewChecker(pool)
 	mainServices := &services{
 		Registrar: registrar,
+		Health:    healthChecker,
 	}
 	return mainServices, func() {
 		cleanup()
@@ -56,6 +59,7 @@ func initializeServices(ctx context.Context, dsn string) (*services, func(), err
 
 type services struct {
 	*app.Registrar
+	Health *health.Checker
 }
 
 var set = wire.NewSet(internal.Set, wire.Struct(new(services), "*"))

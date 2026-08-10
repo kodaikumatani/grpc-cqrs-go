@@ -9,10 +9,12 @@ import (
 	"github.com/google/wire"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/health"
 )
 
 type services struct {
 	*app.Registrar
+	Health *health.Checker
 }
 
 var set = wire.NewSet(
