@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/command"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/entity"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/authn"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/user"
 	"google.golang.org/grpc/codes"
@@ -43,7 +43,7 @@ func (h *handler) CreateUser(
 		return nil, grpcerr.WithStatus(err, codes.InvalidArgument, err.Error())
 	}
 
-	id, err := authn.UserID(ctx)
+	id, err := identity.UserID(ctx)
 	if err != nil {
 		return nil, grpcerr.WithStatus(err, codes.Unauthenticated, msgUnauthenticated)
 	}
