@@ -27,5 +27,4 @@ FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/serve /serve
 
 EXPOSE 50051
-USER nonroot:nonroot
 ENTRYPOINT ["/serve"]
