@@ -39,6 +39,17 @@ static_resources:
                             cluster: app
                             timeout: 0s # gRPC ストリーミング対応
                 http_filters:
+                  # ⚠️ 必須。app は x-endpoint-api-userinfo を無条件に信頼するので、
+                  # クライアントが自分で送ってきた同名ヘッダを **最初に落とす**。
+                  # これが無いと、Envoy 経由でもヘッダを偽造するだけで任意ユーザーに
+                  # なりすませる (到達経路を Envoy だけに絞っても防げない)。
+                  # jwt_authn が後段で検証済みの値を改めて付ける。
+                  - name: envoy.filters.http.header_mutation
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
+                      mutations:
+                        request_mutations:
+                          - remove: x-endpoint-api-userinfo
                   - name: envoy.filters.http.jwt_authn
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
@@ -58,10 +69,12 @@ static_resources:
                               timeout: 5s
                             cache_duration: { seconds: 600 }
                       rules:
-                        # health / reflection は無認証で通す(本番 probe / 探索用)
+                        # health のみ無認証で通す(kubelet / LB の probe 用)。
                         - match: { prefix: "/grpc.health." }
-                        - match: { prefix: "/grpc.reflection." }
-                        # それ以外は JWT 必須
+                        # ⚠️ reflection を無認証で開けないこと。外部公開経路では
+                        # 全 service/method を匿名で列挙されるため、catch-all 側に
+                        # 入れて JWT 必須にする。開発中に列挙したいなら、ローカルで
+                        # app を直接叩く (Envoy を挟まない) のが安全。
                         - match: { prefix: "/" }
                           requires: { provider_name: oidc }
                   - name: envoy.filters.http.router
@@ -88,6 +101,12 @@ static_resources:
     # JWKS 取得先(TLS)。<JWKS_HOST> は JWKS_URI のホスト名。
     - name: jwks
       type: STRICT_DNS
+      # ⚠️ 既定の AUTO は「AAAA が 1 件でも返れば A を引かない」。IPv6 egress の無い
+      # k8s クラスタ (よくある) では、到達不能な IPv6 だけを掴んで JWKS 取得が失敗し、
+      # 有効なトークンでも "Jwks remote fetch is failed" になる。DNS 解決自体は成功し
+      # endpoint も healthy 扱いになるうえ、log_level: info では何もログに出ないため
+      # 極めて気づきにくい。IPv6 egress がある環境なら V4_PREFERRED でもよい。
+      dns_lookup_family: V4_ONLY
       connect_timeout: 5s
       load_assignment:
         cluster_name: jwks
@@ -101,3 +120,14 @@ static_resources:
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
           sni: <JWKS_HOST>
+          # ⚠️ validation_context を省くと Envoy は上流の証明書を検証しない。
+          # JWKS は署名鍵の入手経路なので、差し替えられればトークン偽造が通る。
+          # CA バンドルのパスは envoy イメージに合わせること
+          # (envoyproxy/envoy:distroless-* は /etc/ssl/certs/ca-certificates.crt)。
+          common_tls_context:
+            validation_context:
+              trusted_ca:
+                filename: /etc/ssl/certs/ca-certificates.crt
+              match_typed_subject_alt_names:
+                - san_type: DNS
+                  matcher: { exact: "<JWKS_HOST>" }
