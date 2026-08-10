@@ -1,0 +1,18 @@
+# syntax=docker/dockerfile:1
+
+# Atlas 公式イメージに migrations と atlas.hcl を同梱しただけの migrate 実行用イメージ。
+# migration の単一ソースは app repo(この repo)。k8s の initContainer から
+#   atlas migrate apply --env k8s   (URL は環境変数 DATABASE_URL から)
+# として実行する。
+FROM arigaio/atlas:latest
+
+WORKDIR /work
+
+# atlas.sum も含めてコピー(atlas が整合性を検証する)
+COPY database/migrations ./database/migrations
+COPY atlas.hcl ./atlas.hcl
+
+# entrypoint は atlas バイナリ(公式イメージでは /atlas)。
+# 既定で k8s env の pending migration を適用(冪等)。
+ENTRYPOINT ["/atlas"]
+CMD ["migrate", "apply", "--env", "k8s"]

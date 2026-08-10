@@ -3,6 +3,7 @@ name: build
 # GitHub Release を publish したときだけ GHCR(ghcr.io) にイメージを push する。
 # (main への毎 push では build しない。リリース = タグ基点でイメージを固定)
 # homelab(RPi5 = arm64)向けに linux/arm64 をビルド。
+# app 本体と migrate(atlas + migrations 同梱)の 2 イメージを同一タグで push する。
 on:
   release:
     types: [published]
@@ -14,6 +15,13 @@ permissions:
 jobs:
   build-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: ghcr.io/${{ github.repository }}
+            dockerfile: Dockerfile
+          - image: ghcr.io/${{ github.repository }}-migrate
+            dockerfile: Dockerfile.migrate
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +38,7 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ matrix.image }}
           # release の tag(vX.Y.Z)から :X.Y.Z / :X.Y と :latest を付与
           tags: |
             type=semver,pattern={{version}}
@@ -40,6 +48,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

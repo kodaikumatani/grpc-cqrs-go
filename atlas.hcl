@@ -13,3 +13,13 @@ env "local" {
     }
   }
 }
+
+# コンテナ(k8s の migrate initContainer)からの `atlas migrate apply --env k8s` 用。
+# 接続先は環境変数 DATABASE_URL から取る(シェル不要・secret を args に出さない)。
+env "k8s" {
+  url = getenv("DATABASE_URL")
+
+  migration {
+    dir = "file://./database/migrations"
+  }
+}
