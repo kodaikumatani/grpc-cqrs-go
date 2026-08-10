@@ -17,12 +17,15 @@ import (
 
 var (
 	port = flag.Int("port", 50051, "The server port")
+	// host はデフォルトで loopback。app はヘッダ(x-endpoint-api-userinfo)を信頼するため、
+	// 前段(同一 Pod の Envoy 等)からのみ到達させる。別コンテナから叩く構成では 0.0.0.0 に上書き。
+	host = flag.String("host", "127.0.0.1", "The server listen address")
 )
 
 func run(ctx context.Context) error {
 	flag.Parse()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *host, *port))
 	if err != nil {
 		return errors.Wrap(err, "failed to listen")
 	}
