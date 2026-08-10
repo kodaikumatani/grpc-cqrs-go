@@ -91,6 +91,14 @@ static_resources:
           "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
           explicit_http_config:
             http2_protocol_options: {}
+      # app の grpc.health.v1.Health を叩き、serving 状態を検知する。
+      # TCP チェックだと app がハング/DB 断でも「接続可」で healthy に見えるため grpc を使う。
+      health_checks:
+        - timeout: 1s
+          interval: 5s
+          unhealthy_threshold: 2
+          healthy_threshold: 1
+          grpc_health_check: {}
       load_assignment:
         cluster_name: app
         endpoints:
