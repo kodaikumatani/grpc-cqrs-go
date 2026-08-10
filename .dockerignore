@@ -1,0 +1,19 @@
+# VCS / IDE
+.git
+.github
+.vscode
+.idea
+
+# ドキュメント / インフラ (イメージには不要)
+*.md
+README.md
+compose.yaml
+espv2/
+envoy/
+database/initdb.d/
+mise.toml
+
+# ローカル成果物
+bin/
+tmp/
+*.pb

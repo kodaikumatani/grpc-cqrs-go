@@ -1,0 +1,103 @@
+# Envoy をアプリの前段(sidecar/ゲートウェイ)に置き、JWT を検証して
+# 検証済み payload を X-Endpoint-API-UserInfo ヘッダに載せて backend(app) へ渡す。
+# ESP(Cloud Endpoints) の代替 — GCP 非依存 / arm64 対応。
+#
+#   client ─(authorization: Bearer <JWT>)─▶ Envoy :8080
+#          ─(x-endpoint-api-userinfo: base64url(payload))─▶ app 127.0.0.1:50051
+#
+# app 側は無改修: gateway.Parse が forward_payload_header の値(base64url(JSON))を読む。
+#
+# 要置換: <ISSUER> / <AUDIENCE> / <JWKS_URI> / <JWKS_HOST>
+# ⚠️ IdP は JWKS(JSON Web Key Set) を公開している必要がある。Firebase の securetoken は
+#    x509(PEM) 形式で JWKS 非対応 → Envoy の remote_jwks では直接使えない。
+#    JWKS を公開する IdP(Auth0/Keycloak/Cloudflare Access/Google Sign-In 等)を使うこと。
+admin:
+  address:
+    socket_address: { address: 127.0.0.1, port_value: 9901 }
+
+static_resources:
+  listeners:
+    - name: ingress
+      address:
+        # Pod の唯一の入口。Service はこのポートだけを晒す。
+        socket_address: { address: 0.0.0.0, port_value: 8080 }
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                codec_type: AUTO
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: backend
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: "/" }
+                          route:
+                            cluster: app
+                            timeout: 0s # gRPC ストリーミング対応
+                http_filters:
+                  - name: envoy.filters.http.jwt_authn
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+                      providers:
+                        oidc:
+                          issuer: "<ISSUER>"
+                          audiences: ["<AUDIENCE>"]
+                          # 検証済み payload を base64url(JSON) でこのヘッダに載せる
+                          # = ESP の X-Endpoint-API-UserInfo 互換。
+                          forward_payload_header: x-endpoint-api-userinfo
+                          # authorization ヘッダは backend に流さない(不要 & 漏洩防止)
+                          forward: false
+                          remote_jwks:
+                            http_uri:
+                              uri: "<JWKS_URI>"
+                              cluster: jwks
+                              timeout: 5s
+                            cache_duration: { seconds: 600 }
+                      rules:
+                        # health / reflection は無認証で通す(本番 probe / 探索用)
+                        - match: { prefix: "/grpc.health." }
+                        - match: { prefix: "/grpc.reflection." }
+                        # それ以外は JWT 必須
+                        - match: { prefix: "/" }
+                          requires: { provider_name: oidc }
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    # backend = 同一 Pod の app(loopback)。gRPC なので HTTP/2 で接続。
+    - name: app
+      type: STATIC
+      connect_timeout: 1s
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: app
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: 127.0.0.1, port_value: 50051 }
+    # JWKS 取得先(TLS)。<JWKS_HOST> は JWKS_URI のホスト名。
+    - name: jwks
+      type: STRICT_DNS
+      connect_timeout: 5s
+      load_assignment:
+        cluster_name: jwks
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: <JWKS_HOST>, port_value: 443 }
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: <JWKS_HOST>
