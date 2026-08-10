@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	ulid "github.com/oklog/ulid/v2"
 )
 
 const createRecipe = `-- name: CreateRecipe :exec
@@ -20,7 +19,7 @@ VALUES ($1, $2, $3, $4, $5)
 
 type CreateRecipeParams struct {
 	ID          uuid.UUID
-	UserID      ulid.ULID
+	UserID      string
 	Title       string
 	Description string
 	Visibility  Visibility
@@ -45,7 +44,7 @@ WHERE id = $1
 
 type GetRecipeRow struct {
 	ID          uuid.UUID
-	UserID      ulid.ULID
+	UserID      string
 	Title       string
 	Description string
 	Visibility  Visibility
@@ -74,7 +73,7 @@ WHERE r.id = $1
 
 type GetRecipeWithUserRow struct {
 	ID          uuid.UUID
-	UserID      ulid.ULID
+	UserID      string
 	Title       string
 	Description string
 	Visibility  Visibility

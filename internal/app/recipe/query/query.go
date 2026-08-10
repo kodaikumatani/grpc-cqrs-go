@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/recipe/entity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
-	"github.com/oklog/ulid/v2"
 )
 
 type Query struct {
@@ -26,7 +25,7 @@ func NewQuery(
 
 func (q *Query) Get(
 	ctx context.Context,
-	userID ulid.ULID,
+	userID string,
 	id uuid.UUID,
 ) (*RecipeWithUser, error) {
 	result, err := q.storage.Get(ctx, id)
@@ -38,11 +37,11 @@ func (q *Query) Get(
 	case entity.VisibilityPublic:
 		// 誰でも可（素通り）
 	case entity.VisibilityPrivate:
-		if err := q.checker.IsRecipeOwner(ctx, userID.String(), id.String()); err != nil {
+		if err := q.checker.IsRecipeOwner(ctx, userID, id.String()); err != nil {
 			return nil, err
 		}
 	case entity.VisibilityRestricted:
-		if err := q.checker.CanViewRecipe(ctx, userID.String(), id.String()); err != nil {
+		if err := q.checker.CanViewRecipe(ctx, userID, id.String()); err != nil {
 			return nil, err
 		}
 	default:

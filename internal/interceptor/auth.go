@@ -7,7 +7,6 @@ import (
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity/gateway"
-	"github.com/oklog/ulid/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -54,15 +53,15 @@ func isPublicMethod(fullMethod string) bool {
 	return false
 }
 
-func userIDFromMetadata(ctx context.Context) (ulid.ULID, error) {
+func userIDFromMetadata(ctx context.Context) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return ulid.ULID{}, identity.ErrUnauthenticated
+		return "", identity.ErrUnauthenticated
 	}
 
 	vals := md.Get(gateway.HeaderUserInfo)
 	if len(vals) == 0 {
-		return ulid.ULID{}, identity.ErrUnauthenticated
+		return "", identity.ErrUnauthenticated
 	}
 
 	return gateway.Parse(vals[0])

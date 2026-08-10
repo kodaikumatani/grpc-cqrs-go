@@ -2,21 +2,20 @@ package entity
 
 import (
 	"errors"
-
-	"github.com/oklog/ulid/v2"
 )
 
 var ErrAlreadyExists = errors.New("user already exits")
 
 type User struct {
-	id    ulid.ULID
+	id    string
 	name  string
 	email string
 }
 
 // NewUser は業務フィールドを受け取ってユーザーを構築する。
-// id は呼び出し側(app 層)が用意する。
-func NewUser(id ulid.ULID, name, email string) *User {
+// id は呼び出し側(app 層)が用意する。IdP の sub をそのまま user id として使う
+// （ULID とは限らない不透明な文字列）。
+func NewUser(id, name, email string) *User {
 	return &User{
 		id:    id,
 		name:  name,
@@ -24,6 +23,6 @@ func NewUser(id ulid.ULID, name, email string) *User {
 	}
 }
 
-func (u *User) ID() ulid.ULID { return u.id }
+func (u *User) ID() string    { return u.id }
 func (u *User) Name() string  { return u.name }
 func (u *User) Email() string { return u.email }

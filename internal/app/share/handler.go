@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/grpcerr"
+	"github.com/kodaikumatani/grpc-cqrs-go/internal/identity"
 	pb "github.com/kodaikumatani/grpc-cqrs-go/pkg/pb/share"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -57,7 +57,7 @@ func (h *handler) ShareRecipe(
 	}
 
 	if err := h.command.ShareRecipe(ctx,
-		userID.String(),
+		userID,
 		request.RecipeId,
 		request.TargetUserId,
 		relation); err != nil {

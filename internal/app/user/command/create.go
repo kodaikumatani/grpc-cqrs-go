@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/app/user/entity"
-	"github.com/oklog/ulid/v2"
 )
 
 type Command struct {
@@ -17,7 +16,7 @@ func NewCommand(storage Storage) *Command {
 
 func (c *Command) Create(
 	ctx context.Context,
-	id ulid.ULID,
+	id string,
 	name,
 	email string,
 ) (*entity.User, error) {

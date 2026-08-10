@@ -3,7 +3,8 @@ schema "gcook" {}
 table "users" {
   schema = schema.gcook
   column "id" {
-    type = varchar(26)
+    # IdP の sub をそのまま user id に使う(ULID 固定ではない不透明文字列)
+    type = varchar(255)
   }
   column "name" {
     type = varchar(255)
@@ -34,7 +35,7 @@ table "recipes" {
     type = uuid
   }
   column "user_id" {
-    type = varchar(26)
+    type = varchar(255)
   }
   column "title" {
     type = varchar(255)

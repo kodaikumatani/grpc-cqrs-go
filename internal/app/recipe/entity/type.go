@@ -3,7 +3,6 @@ package entity
 import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/uuid"
-	"github.com/oklog/ulid/v2"
 )
 
 var (
@@ -13,7 +12,7 @@ var (
 
 type Recipe struct {
 	id          uuid.UUID
-	userID      ulid.ULID
+	userID      string
 	title       string
 	description string
 	visibility  Visibility
@@ -23,7 +22,7 @@ type Recipe struct {
 // timestamps は永続化層(DB の default / now())が管理するため domain は持たない。
 func NewRecipe(
 	id uuid.UUID,
-	userID ulid.ULID,
+	userID string,
 	title, description string,
 	visibility Visibility,
 ) *Recipe {
@@ -46,7 +45,7 @@ func (r *Recipe) ChangeVisibility(v Visibility) {
 }
 
 func (r *Recipe) ID() uuid.UUID          { return r.id }
-func (r *Recipe) UserID() ulid.ULID      { return r.userID }
+func (r *Recipe) UserID() string         { return r.userID }
 func (r *Recipe) Title() string          { return r.title }
 func (r *Recipe) Description() string    { return r.description }
 func (r *Recipe) Visibility() Visibility { return r.visibility }
