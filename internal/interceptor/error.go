@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/kodaikumatani/grpc-cqrs-go/internal/authz"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -17,10 +18,13 @@ const (
 )
 
 // ErrorHandlingUnaryInterceptor は handler が返したエラーを一元的に処理する。
-//   - handler が付けた status（既知エラー）: cause を warn ログに残し、安全な status を返す
+//   - handler が付けた status（既知エラー）: cause をログに残し、安全な status を返す
+//   - 横断的な authz エラー: PermissionDenied に変換
 //   - 未変換の生エラー（想定外の内部エラー）: cause を error ログに残し、client には汎用文言
 //
-// これにより内部エラーの詳細を client に漏らさず、ログには常に cause を残せる。
+// ログレベルは gRPC コードで決める（想定内のクライアントエラーは info、サーバ起因のみ
+// warn/error）。これにより内部エラーを client に漏らさず、cause は常にログへ残しつつ、
+// PermissionDenied 等の日常的な拒否で warn を溢れさせない。
 func ErrorHandlingUnaryInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
@@ -34,17 +38,38 @@ func ErrorHandlingUnaryInterceptor() grpc.UnaryServerInterceptor {
 		}
 
 		if st, ok := status.FromError(err); ok {
-			log.Ctx(ctx).Warn().Err(err).Str("method", info.FullMethod).Msg("request failed")
+			logStatus(ctx, st.Code(), err, info.FullMethod, "request failed")
 			return resp, st.Err()
 		}
 
 		// 横断的な authz エラーはここで一元変換する（各 handler で繰り返さない）。
 		if errors.Is(err, authz.ErrPermissionDenied) {
-			log.Ctx(ctx).Warn().Err(err).Str("method", info.FullMethod).Msg("permission denied")
+			logStatus(ctx, codes.PermissionDenied, err, info.FullMethod, "permission denied")
 			return resp, status.Error(codes.PermissionDenied, msgPermissionDenied)
 		}
 
 		log.Ctx(ctx).Error().Err(err).Str("method", info.FullMethod).Msg("unhandled error")
 		return resp, status.Error(codes.Internal, msgInternalServerError)
+	}
+}
+
+// logStatus は gRPC コードに応じたレベルで cause をログする。
+func logStatus(ctx context.Context, code codes.Code, cause error, method, msg string) {
+	log.Ctx(ctx).WithLevel(levelForCode(code)).Err(cause).Str("method", method).Msg(msg)
+}
+
+// levelForCode は gRPC ステータスコードをログレベルに対応づける。
+// 想定内のクライアントエラー（不正入力・未検出・権限なし等）は info、サーバ起因のみ
+// warn / error にして、日常的な 4xx 相当でログを汚さない。
+func levelForCode(c codes.Code) zerolog.Level {
+	switch c {
+	case codes.Internal, codes.Unknown, codes.DataLoss:
+		return zerolog.ErrorLevel
+	case codes.Unavailable, codes.DeadlineExceeded, codes.ResourceExhausted:
+		return zerolog.WarnLevel
+	default:
+		// InvalidArgument / NotFound / AlreadyExists / PermissionDenied /
+		// Unauthenticated / FailedPrecondition など想定内のクライアントエラー
+		return zerolog.InfoLevel
 	}
 }
