@@ -12,8 +12,9 @@ Feature-first + CQRS アーキテクチャで構築した gRPC サーバーで�
 - **sqlc** - SQL からの型安全なコード生成
 - **Atlas** - データベースマイグレーション
 - **Buf** - Protobuf コード生成
-- **ESPv2 (ESP) + Firebase Authentication** - 認証（前段のゲートウェイで検証しヘッダ伝播）
+- **Envoy / ESPv2（前段ゲートウェイ）+ OIDC (JWKS)** - 認証（ゲートウェイが JWT を検証し検証済み ID をヘッダ伝播）
 - **zerolog** - 構造化ログ
+- **Docker (distroless) / GitHub Actions → GHCR** - コンテナ配布（linux/arm64）
 
 ## アーキテクチャ
 
@@ -52,8 +53,8 @@ Feature-first + CQRS パターンを採用し、ドメイン（フィーチャ�
 │   │   ├── registrar.go            #   サービス登録
 │   │   └── wire.go
 │   ├── identity/                   # 現在ユーザーの identity（ctx 伝播・grpc 非依存）
-│   │   ├── type.go                 #   UIDKey / UserID(ctx) / ErrUnauthenticated
-│   │   └── gateway/                #   ゲートウェイヘッダの解釈 (Parse, HeaderUserInfo)
+│   │   ├── type.go                 #   UIDKey / UserID(ctx)→string / ErrUnauthenticated
+│   │   └── gateway/                #   ゲートウェイヘッダの解釈 (Parse→sub, HeaderUserInfo)
 │   ├── authz/                      # 認可 (ReBAC)
 │   │   ├── check.go                #   Checker (Can*/Is*)
 │   │   ├── model.go                #   Tuple, ObjectType, Relation, Permission
@@ -68,14 +69,19 @@ Feature-first + CQRS パターンを採用し、ドメイン（フィーチャ�
 │   │   ├── pool.go                 #   コネクションプール
 │   │   └── wire.go
 │   ├── grpcerr/                    # gRPC エラー変換 (WithStatus: cause 保持 + 安全な status)
+│   ├── health/                     # gRPC ヘルスチェック (grpc.health.v1.Health, DB 疎通連動)
 │   ├── interceptor/                # gRPC インターセプター
-│   │   ├── auth.go                 #   認証（ヘッダ→UID, GatewayAuthUnaryInterceptor + 公開メソッド除外）
-│   │   ├── error.go                #   エラー処理（内部エラー秘匿 + cause ログ）
+│   │   ├── auth.go                 #   認証（ヘッダ→sub, GatewayAuthUnaryInterceptor + 公開メソッド除外）
+│   │   ├── error.go                #   エラー処理（内部エラー秘匿 + cause ログ + code 別ログレベル）
 │   │   ├── logging.go              #   リクエストログ
 │   │   └── recovery.go             #   パニックリカバリー
 │   └── logger/
 │       └── zerolog.go
-├── espv2/                          # ESPv2 (API ゲートウェイ) 導入 scaffold (config/compose/README)
+├── envoy/                          # Envoy 前段ゲートウェイの参照実装 (jwt_authn + JWKS)
+├── espv2/                          # ESPv2 (Cloud Endpoints) 導入 scaffold（GCP 前提の代替案）
+├── Dockerfile                      # app イメージ (multi-stage / distroless / arm64)
+├── Dockerfile.migrate              # migrate イメージ (Atlas + migrations 同梱)
+├── .github/workflows/build.yml     # Release publish で GHCR へ arm64 push
 ├── pkg/pb/                         # Protobuf 生成コード (recipe/share/user)
 ├── proto/                          # Protobuf 定義 (recipe/share/user)
 ├── atlas.hcl                       # Atlas 設定
@@ -105,15 +111,23 @@ handler.go          ← gRPC リクエストの受付・バリデーション・
 app 内でトークン検証はしない。**前段(ゲートウェイ)が検証済みの ID をヘッダで渡す前提**で、
 app はそれを信頼して現在ユーザーの identity を確定・伝播するだけ（`internal/identity`）。
 
-- **本番**: ESP(ESPv2/Envoy) が Firebase の ID トークンを検証し、`X-Endpoint-API-UserInfo`
-  ヘッダを付与 → `GatewayAuthUnaryInterceptor` が UID を取り出し ctx へ
-- **ローカル**: ESP 無し。開発者がヘッダを直接埋め込む（検証なし・impersonate 用。`espv2/README.md` 参照）
-- 以降 `identity.UserID(ctx)` で `ulid.ULID` を取得（ctx を読むのは handler だけ、下層へは typed で渡す）
-- **前提**: Firebase の uid がアプリの user id（ULID）であること。`CreateUser` は認証済み UID を user.id として登録する
-- reflection / health は認証不要（`GatewayAuthUnaryInterceptor` が除外。health は本番の probe 用）
+- **本番**: 前段ゲートウェイ（Envoy の `jwt_authn` 等）が OIDC の ID トークンを **JWKS で検証**し、
+  検証済み payload を `X-Endpoint-API-UserInfo`(base64url JSON) ヘッダに載せる
+  → `GatewayAuthUnaryInterceptor` が `sub` を取り出し ctx へ（参照実装は `envoy/`）
+- **ローカル**: ゲートウェイ無し。開発者がヘッダを直接埋め込む（検証なし・impersonate 用）
+- 以降 `identity.UserID(ctx)` で **`string`（IdP の `sub`）** を取得（ctx を読むのは handler だけ、下層へは typed で渡す）
+- **user id = IdP の `sub` をそのまま採用**（ULID とは限らない不透明文字列。例: Google OAuth は数値文字列）。
+  `CreateUser` は認証済み `sub` を user.id として登録する
+- reflection / health は app 側 interceptor では認証不要。ただし外部公開経路では reflection も
+  ゲートウェイで JWT 必須にすること（無認証はヘルスチェックのみ。`envoy/` 参照）
 
 > ⚠️ app はヘッダを信頼するため、**ゲートウェイ経由でのみ到達可能**にすること
-> （直接到達できるとヘッダ偽造で認証を素通りできる）。
+> （直接到達できるとヘッダ偽造で認証を素通りできる）。ゲートウェイ側もクライアント送信の
+> `X-Endpoint-API-UserInfo` を除去し、検証済みの値だけを渡すこと。
+
+> **IdP について**: JWKS を公開する OIDC provider（Google OAuth / Auth0 / Keycloak /
+> Cloudflare Access 等）を使う。Firebase の securetoken は公開鍵が x509 で JWKS 非対応のため、
+> Envoy の `remote_jwks` では直接利用できない。
 
 ### 認可 (ReBAC)
 
@@ -131,6 +145,16 @@ Relationship-Based Access Control を採用。
 - 未変換の生エラーは `ErrorHandlingUnaryInterceptor` が汎用 `Internal` + cause ログに（**内部エラーを client に漏らさない**）
 - 横断的な `PermissionDenied` は interceptor で集約
 - DB 境界で低レベルエラーを翻訳（`23505` → AlreadyExists / `pgx.ErrNoRows` → NotFound）
+- **ログレベルは gRPC コードで決める**（`levelForCode`）: 想定内のクライアントエラー
+  （`InvalidArgument` / `PermissionDenied` / `AlreadyExists` / `Unauthenticated`）は `info`、
+  `NotFound` や一時障害（`Unavailable` 等）は `warn`、サーバ起因（`Internal` 等）は `error`
+
+### ヘルスチェック
+
+`grpc.health.v1.Health`（`internal/health`）を登録し、**プロセス生存ではなく実際に serve 可能か**を返す。
+バックグラウンドで DB に定期 ping し、成否で `SERVING` / `NOT_SERVING` を切り替える（状態遷移時のみログ）。
+前段の Envoy は app cluster の `grpc_health_check` でこれを叩き、readiness に反映する
+（TCP チェックだと app ハング/DB 断でも healthy に見えてしまうため）。
 
 ## セットアップ
 
@@ -171,20 +195,21 @@ go run ./cmd/serve
 
 認証は前段のゲートウェイが検証済み ID を `x-endpoint-api-userinfo` ヘッダで渡す前提（[認証 / identity](#認証--identity) 参照）。
 
-- **本番**（ESP 前段）: クライアントは `authorization: Bearer <firebase_id_token>` を送る（ESP が検証しヘッダ付与）
-- **ローカル**（ESP 無し）: `x-endpoint-api-userinfo` を手で埋め込む。以下の例はこの形。
+- **本番**（ゲートウェイ前段）: クライアントは `authorization: Bearer <OIDC の ID トークン>` を送る
+  （ゲートウェイが JWKS で検証し `x-endpoint-api-userinfo` を付与。例: Google OAuth の ID トークン）
+- **ローカル**（ゲートウェイ無し）: `x-endpoint-api-userinfo` を手で埋め込む。以下の例はこの形。
 
 ```bash
-# 対象ユーザーの ULID を base64url(JSON) にしてヘッダ値に（app は padding 有無どちらも可）
-UID=01J...
-INFO=$(printf '{"sub":"%s"}' "$UID" | basenc --base64url | tr -d '=')
+# 任意の sub（本番では IdP の sub に対応）を base64url(JSON) にしてヘッダ値に（app は padding 有無どちらも可）
+SUB=local-user-1
+INFO=$(printf '{"sub":"%s"}' "$SUB" | basenc --base64url | tr -d '=')
 ```
 
 ### UserService
 
 #### CreateUser（要認証）
 
-認証済みの Firebase ユーザーを app 側の users に登録します（user id = Firebase uid）。
+認証済みユーザーを app 側の users に登録します（user id = IdP の `sub`）。
 
 ```bash
 grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
@@ -240,16 +265,17 @@ grpcurl -plaintext -H "x-endpoint-api-userinfo: $INFO" -d '{
 {
   "recipe": {
     "id": "550e8400-...",
-    "userId": "01JNQF...",
+    "userId": "101128207731415003767",
     "title": "カレーライス",
     "description": "スパイスから作る本格カレー",
     "visibility": "VISIBILITY_PRIVATE",
     "createdAt": "2026-03-08T...",
     "updatedAt": "2026-03-08T..."
   },
-  "user": { "id": "01JNQF...", "name": "Kodai", "email": "kodai@example.com" }
+  "user": { "id": "101128207731415003767", "name": "Kodai", "email": "kodai@example.com" }
 }
 ```
+（`userId` / `user.id` は IdP の `sub`。recipe の `id` は UUID）
 
 ### ShareService
 
@@ -272,6 +298,17 @@ gRPC リフレクションが有効です:
 ```bash
 grpcurl -plaintext localhost:50051 list
 ```
+
+## デプロイ / コンテナ
+
+- **イメージ**: `Dockerfile`（app、static/distroless/`linux/arm64`）と `Dockerfile.migrate`
+  （`arigaio/atlas` + migrations 同梱、`atlas migrate apply --env k8s`）。
+- **配布**: GitHub **Release を publish** すると `.github/workflows/build.yml` が
+  `ghcr.io/kodaikumatani/grpc-cqrs-go{,-migrate}` を arm64 で GHCR に push（tag = リリースの semver）。
+- **前段ゲートウェイ**: `envoy/`（`jwt_authn` + JWKS で JWT 検証 → `X-Endpoint-API-UserInfo` 付与、
+  app cluster の `grpc_health_check`）。app は `-host 127.0.0.1`（loopback）で起動し、Envoy 経由のみ到達。
+- **k8s (self-hosted) 例**: initContainer(migrate) + app(loopback) + envoy(sidecar) で 1 Pod。
+  共有 PostgreSQL に `sub` を user id とするスキーマを流す（Flux/GitOps でのデプロイ構成は別リポジトリ）。
 
 ## コード生成
 
