@@ -65,11 +65,13 @@ func levelForCode(c codes.Code) zerolog.Level {
 	switch c {
 	case codes.Internal, codes.Unknown, codes.DataLoss:
 		return zerolog.ErrorLevel
-	case codes.Unavailable, codes.DeadlineExceeded, codes.ResourceExhausted:
+	case codes.Unavailable, codes.DeadlineExceeded, codes.ResourceExhausted, codes.NotFound:
+		// NotFound は「存在しない/権限外を存在しないように見せた」対象へのアクセスなので、
+		// 気づけるよう warn にしておく。
 		return zerolog.WarnLevel
 	default:
-		// InvalidArgument / NotFound / AlreadyExists / PermissionDenied /
-		// Unauthenticated / FailedPrecondition など想定内のクライアントエラー
+		// InvalidArgument / AlreadyExists / PermissionDenied / Unauthenticated /
+		// FailedPrecondition など想定内のクライアントエラー
 		return zerolog.InfoLevel
 	}
 }
